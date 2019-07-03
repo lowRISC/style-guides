@@ -821,26 +821,26 @@ Template:
 // One line description of the module
 
 module my_module #(
-    parameter Width = 80,
-    parameter Height = 24
+  parameter Width = 80,
+  parameter Height = 24
 ) (
-    input              clk_i,
-    input              rst_ni,
-    input              req_valid_i,
-    input  [Width-1:0] req_data_i,
-    output             req_ready_o,
-    ...
+  input              clk_i,
+  input              rst_ni,
+  input              req_valid_i,
+  input  [Width-1:0] req_data_i,
+  output             req_ready_o,
+  ...
 );
 
   logic [Width-1:0] req_data_masked;
 
   submodule u_submodule (
-      .clk_i,
-      .rst_ni,
-      .req_valid_i,
-      .req_data_i    (req_data_masked),
-      .req_ready_o,
-      ...
+    .clk_i,
+    .rst_ni,
+    .req_valid_i,
+    .req_data_i    (req_data_masked),
+    .req_ready_o,
+    ...
   );
 
   always_comb begin
@@ -940,18 +940,18 @@ within the module. An example is shown below.
 ```systemverilog
 // ideal, but currently untenable declaration
 module modname #(
-    parameter  int Depth  = 2048,         // 8kB default
-    localparam int Aw     = $clog2(Depth) // derived parameter
+  parameter  int Depth  = 2048,         // 8kB default
+  localparam int Aw     = $clog2(Depth) // derived parameter
 ) (
-    ...
+  ...
 );
 
 // current declaration method with assertion
 module modname #(
-    parameter  int Depth  = 2048,         // 8kB default
-    parameter  int Aw     = $clog2(Depth) // derived parameter
+  parameter  int Depth  = 2048,         // 8kB default
+  parameter  int Aw     = $clog2(Depth) // derived parameter
 ) (
-    ...
+  ...
 );
 
   `ASSERT_INIT(paramCheckAw, Aw == $clog2(Depth))
@@ -1061,20 +1061,20 @@ Example:
 &#x1f44d;
 ```systemverilog {.good}
 module simple (
-    input        clk_i,
-    input        rst_ni,              // Active low reset
+  input        clk_i,
+  input        rst_ni,              // Active low reset
 
-    // writer interface
-    input [15:0] data_i,
-    input        valid_i,
-    output       ready_o,
+  // writer interface
+  input [15:0] data_i,
+  input        valid_i,
+  output       ready_o,
 
-    // bi-directional bus
-    inout [7:0]  driver_io,         // Bi directional signal
+  // bi-directional bus
+  inout [7:0]  driver_io,         // Bi directional signal
 
-    // Differential pair output
-    output       lvds_po,           // Positive part of the differential signal
-    output       lvds_no            // Negative part of the differential signal
+  // Differential pair output
+  output       lvds_po,           // Positive part of the differential signal
+  output       lvds_no            // Negative part of the differential signal
 );
 
   logic valid_d, valid_q, valid_q2, valid_q3;
@@ -1119,9 +1119,9 @@ assignable.
 &#x1f44d;
 ```systemverilog {.good}
 typedef enum logic [1:0] {  // A 2-bit enumerated type
-    AccWrite,
-    AccRead,
-    AccPause
+  AccWrite,
+  AccRead,
+  AccPause
 } access_e; // new named type is created
 access_e req_access, resp_access;
 ```
@@ -1129,8 +1129,8 @@ access_e req_access, resp_access;
 &#x1f44e;
 ```systemverilog {.bad}
 enum {  // Typedef is missing, storage type is missing.
-    Write,
-    Read
+  Write,
+  Read
 } req_access, resp_access; // anonymous enum type
 ```
 
@@ -1183,25 +1183,25 @@ Code example:
 &#x1f44d;
 ```systemverilog {.good}
 module fifo_controller (
-    input         clk_i,
-    input         rst_ni,
+  input         clk_i,
+  input         rst_ni,
 
-    // writer interface
-    input [15:0]  wr_data_i,
-    input         wr_valid_i,
-    output        wr_ready_o,
+  // writer interface
+  input [15:0]  wr_data_i,
+  input         wr_valid_i,
+  output        wr_ready_o,
 
-    // reader interface
-    output [15:0] rd_data_o,
-    output        rd_valid_o,
-    output [7:0]  rd_fullness_o,
-    input         rd_ack_i,
+  // reader interface
+  output [15:0] rd_data_o,
+  output        rd_valid_o,
+  output [7:0]  rd_fullness_o,
+  input         rd_ack_i,
 
-    // memory interface:
-    output [7:0]  mem_addr_o,
-    output [15:0] mem_wdata_o,
-    output        mem_we_o,
-    input  [15:0] mem_rdata_i
+  // memory interface:
+  output [7:0]  mem_addr_o,
+  output [15:0] mem_wdata_o,
+  output        mem_we_o,
+  input  [15:0] mem_rdata_i
 );
 ```
 
@@ -1321,8 +1321,8 @@ and the first port should be declared on the following line.
 
 The closing parenthesis should be on its own line, in column zero.
 
-Indentation for module declaration follows the long-expression wrapping
-rule of four space indentation.
+Indentation for module declaration follows the standard indentation
+rule of two space indentation.
 
 The clock port(s) must be declared first in the port list, followed by any and
 all reset inputs.
@@ -1332,10 +1332,10 @@ Example without parameters:
 &#x1f44d;
 ```systemverilog {.good}
 module foo (
-    input              clk_i,
-    input              rst_ni,
-    input [7:0]        d_i,
-    output logic [7:0] q_o
+  input              clk_i,
+  input              rst_ni,
+  input [7:0]        d_i,
+  output logic [7:0] q_o
 );
 ```
 
@@ -1344,12 +1344,12 @@ Example with parameters:
 &#x1f44d;
 ```systemverilog {.good}
 module foo #(
-    parameter int unsigned Width = 8,
+  parameter int unsigned Width = 8,
 ) (
-    input                    clk_i,
-    input                    rst_ni,
-    input [Width-1:0]        d_i,
-    output logic [Width-1:0] q_o
+  input                    clk_i,
+  input                    rst_ni,
+  input [Width-1:0]        d_i,
+  output logic [Width-1:0] q_o
 );
 ```
 
@@ -1372,15 +1372,15 @@ When parameterizing an instance, specify the parameter using the named parameter
 style. An exception is if there is only one parameter that is obvious such as
 register width, then the instantiation can be implicit.
 
-Indentation for module declaration follows the long-expression wrapping
-rule of four space indentation.
+Indentation for module instantiation follows the standard indentation
+rule of two space indentation.
 
 ```systemverilog
 my_module #(
-    .Height(5),
-    .Width(10)
+  .Height(5),
+  .Width(10)
 ) my_module (
-    ...etc...
+  ...etc...
 
 my_reg #(16) my_reg0 (.clk_i, .rst_ni, .d_i(data_in), .q_o(data_out));
 
@@ -1398,10 +1398,10 @@ like this:
 
 ```systemverilog
 my_module i_my_instance (
-    .clk_i (clk_i),
-    .rst_ni(rst_ni),
-    .d_i   (from_here),
-    .q_o   (to_there)
+  .clk_i (clk_i),
+  .rst_ni(rst_ni),
+  .d_i   (from_here),
+  .q_o   (to_there)
 );
 ```
 
@@ -1410,10 +1410,10 @@ If the port and the connecting signal have the same name, you can use the
 
 ```systemverilog
 my_module i_my_instance (
-    .clk_i,
-    .rst_ni,
-    .d_i   (from_here),
-    .q_o   (to_there)
+  .clk_i,
+  .rst_ni,
+  .d_i   (from_here),
+  .q_o   (to_there)
 );
 ```
 
@@ -1507,15 +1507,15 @@ Examples:
 &#x1f44d;
 ```systemverilog {.good}
 my_module i_module (
-    .thirty_two_bit_input({16'd0, sixteen_bit_word})
+  .thirty_two_bit_input({16'd0, sixteen_bit_word})
 );
 ```
 
 &#x1f44e;
 ```systemverilog {.bad}
 my_module i_module (
-    // Incorrectly implicitly extends from 16 bit to 32 bit
-    .thirty_two_bit_input(sixteen_bit_word)
+  // Incorrectly implicitly extends from 16 bit to 32 bit
+  .thirty_two_bit_input(sixteen_bit_word)
 );
 ```
 
@@ -2062,8 +2062,8 @@ tools, this guide prohibits such "bare" generate blocks. Note that the similar
 &#x1f44e;
 ```systemverilog {.bad}
 module foo (
-    input bar,
-    output foo
+  input bar,
+  output foo
 );
   begin // illegal generate block
     assign foo = bar;
@@ -2267,7 +2267,7 @@ name, to make them more readable when viewing waveform traces.
 ```systemverilog {.good}
 // Define the states
 typedef enum {
-    StIdle, StFrameStart, StDynInstrRead, StBandCorr, StAccStoreWrite, StBandEnd
+  StIdle, StFrameStart, StDynInstrRead, StBandCorr, StAccStoreWrite, StBandEnd
 } alcor_state_e;
 
 alcor_state_e alcor_state_d, alcor_state_q;
