@@ -162,10 +162,7 @@ In particular, we inherit these specific formatting guidelines:
 *   Maintain consistent and good
     [punctuation, spelling, and grammar](https://google.github.io/styleguide/cppguide.html#Punctuation,_Spelling_and_Grammar)
     (within comments).
-*   Use standard formatting for [comments](#comments),
-    including C-like formatting for [TODO](https://google.github.io/styleguide/cppguide.html#TODO_Comments)
-    and
-    [deprecation](https://google.github.io/styleguide/cppguide.html#Deprecation_Comments).
+*   Use standard formatting for [comments](#comments).
 
 ### Style Guide Exceptions
 
