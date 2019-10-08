@@ -751,17 +751,14 @@ operations unambiguous.
 
 #### Ternary Expressions
 
-***Nested ternary expressions must be enclosed in parentheses.***
+***Ternary expressions nested in the true condition of another ternary
+expression must be enclosed in parentheses.***
 
 For example:
 
 &#x1f44d;
 ```systemverilog {.good}
-assign state_next = condition_b ?
-    (condition_a ?
-        a_and_b   :
-        b_and_not_a) :
-    state;
+assign foo = condition_a ? (condition_a_x ? x : y) : b;
 ```
 
 While the following nested ternary has only one meaning to the compiler, the
@@ -769,11 +766,16 @@ meaning can be unclear and error-prone to humans:
 
 &#x1f44e;
 ```systemverilog {.bad}
-assign state_next = condition_b ?
-    condition_a ?
-    a_and_b :
-    b_and_not_a :
-    state;
+assign foo = condition_a ? condition_a_x ? x : y : b;
+```
+
+***Parentheses may be omitted if the code formatting conveys the same
+information, for example when describing a priority mux.***
+
+&#x1f44d;
+```systemverilog {.good}
+assign foo = condition_a ? a :
+             condition_b ? b : not_a_nor_b;
 ```
 
 ### Comments
