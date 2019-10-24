@@ -797,6 +797,71 @@ endmodule : foo
 localparam bit ValBaz = 1;  // This comment describes the item to the left.
 ```
 
+It can sometimes be useful to structure the code using header-style comments in
+order to separate different functional parts (like FSMs, the main datapath or
+registers) within a module. In that case, the preferred style is a single-line
+section name, framed with `//` C++ style comments as follows:
+
+```systemverilog
+module foo;
+
+  ////////////////
+  // Controller //
+  ////////////////
+  ...
+
+  ///////////////////////
+  // Main ALU Datapath //
+  ///////////////////////
+  ...
+
+endmodule : foo
+```
+
+If the designer would like to use comments to mark the beginning/end of a
+particular section for better readability (e.g. in nested for loop blocks), the
+preferred way is to use a single-line comment with no extra delineators, as
+shown in the examples below.
+
+&#x1f44d;
+```systemverilog {.good}
+// begin: iterate over foobar
+for (...) begin
+...
+end
+// end: iterate over foobar
+```
+
+&#x1f44d;
+```systemverilog {.good}
+for (...) begin // iterate over foobar
+...
+end // iterate over foobar
+```
+
+&#x1f44e;
+```systemverilog {.bad}
+//-------------------------- iterate over foobar -------------------------------
+for (...) begin
+...
+end
+//-------------------------- iterate over foobar -------------------------------
+```
+
+&#x1f44e;
+```systemverilog {.bad}
+///////////////////////////////
+// begin iterate over foobar //
+///////////////////////////////
+for (...) begin
+...
+end
+///////////////////////////////
+// end iterate over foobar   //
+///////////////////////////////
+```
+
+
 ### Declarations
 
 ***Signals must be declared before they are used. This means that
