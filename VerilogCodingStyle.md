@@ -1784,7 +1784,7 @@ always_comb begin
       end
     end
     StResult: state_d = Idle;
-    default:  state_d = 'X;
+    default: ;
   endcase
 end
 ```
@@ -1797,92 +1797,153 @@ increment.
 
 ### Don't Cares (`X`'s)
 
-***Explicitly specify don't cares when safe to do so. Don't silently
-squash `X` in logic.***
+***The use of `X` literals in RTL code is strongly discouraged. RTL must not
+assert `X` to indicate "don't care" to synthesis in any case.  In order to flag
+and detect invalid conditions, rather than assign and propagate `X` values,
+designs should fully define all signal values and make extensive use of SVAs to
+indicate the invalid conditions. ***
 
-Don't Care values can significantly help the quality of logic optimization and
-should be used wherever it is safe to do so. Explicitly declaring unused decodes
-as `X` has the secondary effect of propagating `X`'s through the design if the
-**input unused** design assumption is violated, making those bugs easier to
-diagnose and fix.
+If not strictly controlled, the use of `X` assignments in RTL to flag invalid or
+don't care conditions can lead to simulation/synthesis mismatches.
 
-Example:
+Instead of assigning and propagating `X` in order to flag and detect invalid
+conditions, it is encouraged to make **extensive use of SVAs**. The added
+benefits of this design practice are that:
+
+- No special code style is required to properly propagate `X` conditions,
+- The chance of accidentally introducing simulation/synthesis mismatches is
+  systematically reduced,
+- Simulation fails quickly and less signal backtracking is needed to root-cause
+  bugs,
+- In several cases, formal property verification (FPV) can be used to prove
+  whether these SVAs can always be fulfilled,
+- In a security context, deterministic/defined behavior is desired, even for
+  illegal/invalid/unreachable input combinations (sometimes stated more tersely
+  as "for security-critical designs, there are no don't-cares").
+
+The solution presented here has similarities with the approaches presented in
+["Being Assertive With Your X"](http://www.lcdm-eng.com/papers/snug04_assertiveX.pdf)
+by Don Mills.
+
+Note that although don't cares can be used to indicate possible optimization
+opportunities to the synthesis tool, it is debatable whether the gains in logic
+reduction are significant enough to outweigh the possible synthesis mismatch
+issues that the use of `X` literals may entail (especially with the gate-counts
+available in today's technologies).
+
+#### Specific Guidance on Case Statements and Ternaries
+
+To comply with this style, RTL must place `` `ASSERT_KNOWN`` assertions on all
+module outputs, with the exception of signals that may implicitly be `X` at the
+beginning of the simulation, such as FIFO, SRAM or register file outputs.
 
 ```systemverilog
+module mymod (
+  input        ina_i,
+  input        inb_i,
+  output logic out_o
+);
+  assign out_o = ina_i ^ inb_i;
+  `ASSERT_KNOWN(OutKnown_A, out_o, clk_i, !rst_ni)
+endmodule : mymod
+```
+
+Further, it is encouraged to add assertions to the signals forming conditions of
+case statements, ternaries or if/else statements. The assertion style is at the
+designer's discretion, and can range from simple `` `ASSERT_KNOWN``  to fully
+functional assertions, as shown in the following examples:
+
+```systemverilog
+typedef enum logic [1:0] {mode0, mode1, mode2} state_e;
+state_e sel;
+
+// encouraged
+`ASSERT_KNOWN(SelKnown_A, sel)
 always_comb begin
-  unique case (state)
-    ALPHA:   decode = 16'd1;
-    BETA:    decode = 16'd127;
-    GAMMA:   decode = 16'd43;
-    // all other states are unused:
-    default: decode = 'X;  // or {16{1'bx}} in Verilog-2001
+  out0 = '0;
+  out1 = '0;
+  unique case (sel)
+    mode1: out0 = foo;
+    mode2: out1 = bar;
+    default: ;
+  endcase
+end
+
+// optional, but more explicit
+// not always applicable
+`ASSERT(MainFsmCase_A, sel inside {mode0, mode1, mode2}, clk_i, !rst_ni)
+always_comb begin
+  out0 = '0;
+  out1 = '0;
+  unique case (sel)
+    mode1: out0 = foo;
+    mode2: out1 = bar;
+    default: ;
   endcase
 end
 ```
 
-Write logic that will either propagate `X` or assert when your inputs are `X`.
-Avoid silently squashing `X` by writing logic that resolves an `X` input to a
-non-`X` output. Instead, write logic that either explicitly propagates the `X`
-or uses an assert to raise an exception when an input is `X`.
-
-Be aware: Any logical operation involving `X` always propagates the `X`.
-
-Example:
+In the context of ternary statements, the following are encouraged examples:
 
 ```systemverilog
-$display("%b", 1'bx == 1'b1);  // produces 1'bx
-$display("%b", 1'bx != 1'b1);  // produces 1'bx
-$display("%b", !(1'bx));       // produces 1'bx.
-// etc.
+// encouraged
+`ASSERT_KNOWN(ModeKnown_A, mode_i, clk_i, !rst_ni)
+`ASSERT_KNOWN(LenKnown_A, len_i, clk_i, !rst_ni)
+// assign '0 for all other combinations
+assign val = (mode_i == ENC)                    ? 8'h01 :
+             (mode_i == DEC && len_i == LEN128) ? 8'h36 :
+             (mode_i == DEC && len_i == LEN192) ? 8'h80 :
+             (mode_i == DEC && len_i == LEN256) ? 8'h40 : 8'h00;
+
+// optional, but more explicit
+`ASSERT(ValSelValid_A, mode_i == ENC || mode_i == DEC &&
+    len_i inside {LEN128, LEN192, LEN256}, clk_i, !rst_ni)
+// using one of the valid outputs for other combinations (saves logic)
+assign val = (mode_i == ENC)                    ? 8'h01 :
+             (mode_i == DEC && len_i == LEN128) ? 8'h36 :
+             (mode_i == DEC && len_i == LEN192) ? 8'h80 :
+             (mode_i == DEC && len_i == LEN256) ? 8'h40 : 8'h01;
 ```
 
-However, when evaluated in a boolean context, `X` always evaluates to false.
+#### Dynamic Array Indexing
 
-Example:
+It should be noted that dynamic array indexing operations can implicitly lead to
+`X`. This should be avoided if possible by either aligning indexed arrays to
+powers of 2 or by adding guarding if statements around the indexing operation.
+These solutions are illustrated in the following examples.
 
-```systemverilog
-always_comb begin
-  if (value) result = 1'b0;    // value is 1'b1
-  else result = 1'b1;          // value is 1'b0 or 1'bx
-end
+
+&#x1f44e;
+```systemverilog {.bad}
+logic selected;
+logic [3:0] idx;
+logic [11:0] foo; // problematic
+
+assign foo = {12'b1010_1111_0000};
+assign selected = foo[idx];
 ```
 
-This can mask subtle problems in code and produce a mismatch between simulation
-and synthesis.
+&#x1f44d;
+```systemverilog {.good}
+logic selected;
+logic [3:0] idx;
+logic [15:0] foo; // aligned to powers of two
 
-Instead, consider these options:
-
-```systemverilog
-always_comb begin
-  result = value ? 1'b1 : 1'b0;  // 1'bx produces 1'bx
-end
+assign foo = {4'b0000, 12'b1010_1111_0000};
+assign selected = foo[idx];
 ```
 
-or
+&#x1f44d;
+```systemverilog {.good}
+logic selected;
+logic [3:0] idx;
+logic [11:0] foo;
 
-```systemverilog
-always_comb begin
-  if (value) result = 1'b0;        // value is 1'b1
-  else if (!value) result = 1'b1;  // value is 1'b0
-  else result = 1'bx;              // value is 1'bx
-end
+assign foo = {12'b1010_1111_0000};
+
+// guarding if statement
+assign selected = (idx < $bits(foo)) ? foo[idx] : 1'b0;
 ```
-
-or
-
-```systemverilog
-always_comb begin
-  assert (!$isunknown(value));     // throws exception if 1'bx
-  if (value) result = 1'b0;        // value is 1'b1
-  else result = 1'b1;              // value is 1'b0 or 1'bx
-end
-```
-
-Further discussion:
-
--   ["I'm Still In Love With My X!"](http://www.sutherland-hdl.com/papers/2013-DVCon_In-love-with-my-X_paper.pdf)
-    by Stuart Sutherland
--   ["Being Assertive With Your X"](http://www.lcdm-eng.com/papers/snug04_assertiveX.pdf) by Don Mills
 
 ### Combinational Logic
 
@@ -1918,7 +1979,7 @@ practice. Always define a default case.***
 Never use either the `full_case` or `parallel_case` pragmas. These pragmas can
 easily cause synthesis-simulation mismatches.
 
-Here is an example of a style-compliant case statement:
+Here is an example of a style-compliant full case statement:
 
 ```systemverilog
 always_comb begin
@@ -1928,26 +1989,65 @@ always_comb begin
     3'b010: operand = accum1 >> 0;
     3'b011: operand = accum1 >> 1;
     3'b1??: operand = regfile[select[1:0]];
-    default: operand = 'X;  // propagate X
+    default: operand = '0; // assign a default
   endcase
 end
 ```
 
 The `unique` prefix is recommended before all case statements, as it creates
 simulation assertions that can catch certain mistakes. In some cases, `priority`
-may be used instead of `unique`, though `if-else-if` structures are a more
-readable representation for priority encoders.
+may be used instead of `unique`, though in such cases, cascaded ternary
+structures should be the preferred way of representing priority encoders as
+they are a more readable representation for priority encoders.
 
-Be sure to use `unique case` correctly. In particular, any variables assigned in
-one case item must be assigned in all case items, including the default. Failing
-to do this can lead to a simulation-synthesis mismatch as described in [Don
-Mills' paper][yalagp].
+Be sure to use `unique case` correctly. In particular, make sure that:
 
-The `default` case is required to avoid accidental inference of latches, even if
-all cases are covered. In simulation, a case expression that evaluates to `X`
-will not match any case and will behave as a latch, leading to different
-behavior than synthesis. Instead, in most scenarios, the best choice is to
-propagate the `X` by assigning all output variables to `X` by default.
+  - a `default:` statement is **always** included in order to avoid accidental
+  inference of latches, even if all cases are covered. In simulation, a case
+  expression that evaluates to `X` will not match any case and will behave as a
+  latch, leading to different behavior than synthesis if no default is specified.
+
+  - if no default assignments are given before the case statement as shown in
+  the example above, any variables assigned in one case item must be assigned in
+  all case items, including the `default:`. Failing to do this can lead to a
+  simulation-synthesis mismatch as described in [Don Mills' paper][yalagp].
+
+The following is a different example showing a style-compliant case statement
+variant that is frequently used for describing the next-state logic of a finite
+state machine. What is different from the previous example is that the default
+assignments are put before the `unique case` block, thus making it possible to
+omit common assignments in the individual cases further below. If it weren't for
+the common default assignments before the case statement, all variables would
+have to be assigned a value in all cases and in the `default:` in order to
+prevent simulation-synthesis mismatches.
+
+```systemverilog
+always_comb begin
+  // common default assignments
+  state_d = state_q;
+  outa = 1'b0;
+  outb = 1'b0;
+  outc = 1'b0;
+
+  unique case (state_q)
+    Idle: begin
+      state_d = Work;
+      outa = in0;
+    end
+    Work: begin
+      state_d = Wait;
+      outb = in1;
+    end
+    Wait: begin
+      state_d = Idle;
+      outc = in2;
+    end
+    // always include a default case
+    // empty default permissible due to defaults before case block
+    default: ;
+  endcase
+end
+```
 
 ##### Wildcards in case items
 
@@ -2208,6 +2308,14 @@ if clauses and ternary assignments.  Use bit-wise constructs (`~`, `|`,
 
 &#x1f44d;
 ```systemverilog {.good}
+always_ff @(posedge clk_i or negedge rst_ni) begin
+  if (!rst_ni) begin
+    reg_q <= '0;
+  end else begin
+    reg_q <= reg_d;
+  end
+end
+
 always_comb begin
   if (bool_a || (bool_b && !bool_c) begin
     x = 1'b1;
@@ -2221,6 +2329,14 @@ assign y = (a & ~b) | c;
 
 &#x1f44e;
 ```systemverilog {.bad}
+always_ff @(posedge clk_i or negedge rst_ni) begin
+  if (~rst_ni) begin
+    reg_q <= '0;
+  end else begin
+    reg_q <= reg_d;
+  end
+end
+
 always_comb begin
   if (bool_a | (bool_b & ~bool_c) begin
     x = 1'b1;
@@ -2231,6 +2347,7 @@ end
 assign z = ((bool_a ^ bool_b) | bool_c) ? a : b;
 assign y = (a && !b) || c;
 ```
+
 
 ### Packed Ordering
 
@@ -2353,13 +2470,8 @@ always_comb begin
     StFrameStart: begin
       // ... etc ...
     end
-    default: begin
-      // X's in the inputs propagate to X's in the outputs
-      alcor_state_d = 'X;
-      foo = 'X;
-      bar = 'X;
-      bum = 'X;
-    end
+    // may be empty or used to catch parasitic states
+    default: alcor_state_d = StIdle;
   endcase
 end
 
@@ -2405,6 +2517,48 @@ always_ff @(posedge clk) begin
   data_valid_q3 <= data_valid_q2;
 end
 ```
+
+### Assertion Macros
+
+It is encouraged to use SystemVerilog assertions (SVAs) throughout the design to
+check functional correctness and flag invalid conditions. In order to increase
+productivity and keep the assertions short and concise, the following assertion
+macros can be used:
+
+```systemverilog
+// immediate assertion, to be placed within a process.
+`ASSERT_I(<name>, <property>)
+// immediate assertion wrapped within an initial block. can be used for things
+// like parameter checking.
+`ASSERT_INIT(<name>, <property>)
+// concurrent assertion to be used for functional assertions.
+`ASSERT(<name>, <property>, <clk>, <reset condition>)
+// concurrent assertion that checks that a signal has a known value after reset
+// (i.e. that the signal is not `X`).
+`ASSERT_KNOWN(<name>, <signal>, <clk>, <reset condition>)
+```
+
+An implementation of these macros (including other useful variations thereof)
+can be found here:
+https://github.com/lowRISC/opentitan/blob/master/hw/ip/prim/rtl/prim_assert.sv
+
+
+#### A Note on Security Critical Applications
+
+For security critical applications, the names of the assertion macros involved
+in guarding case statements and ternaries shall be postfixed with `_SEC`. This
+enables security-specific post-processing of these statements at a later stage
+in the design process. In terms of functionality these macros should be
+identical to the original assertions, i.e.,
+
+```systemverilog
+`define ASSERT_SEC `ASSERT
+`define ASSERT_I_SEC `ASSERT_I
+`define ASSERT_KNOWN_SEC `ASSERT_KNOWN
+```
+
+More security assertion and coding style guidance will be given in a separate
+document, soon.
 
 ## Appendix - Condensed Style Guide
 
@@ -2471,7 +2625,8 @@ body for explanations examples, and exceptions.
 * Sequential logic must use **non-blocking** assignments
 * Combinational blocks must use **blocking** assignments
 * Use of latches is discouraged, use flip-flops when possible
-* Explicitly specify don’t cares (`X`) when safe to do so.
+* The use of `X` assignments in RTL is strongly discouraged, make use of SVAs
+  to check invalid behavior instead.
 * Prefer `assign` statements wherever practical.
 * Use `unique case` and always define a `default` case
 * Use available signed arithmetic constructs wherever signed arithmetic
