@@ -994,40 +994,16 @@ instantiation. The preferred naming convention for all parameters is
 `UpperCamelCase`. Some projects may choose to use `ALL_CAPS` to differentiate
 tuneable parameters from constants.
 
-The preference for derived parameters within the `module` declaration is
-to use `localparam`, **however** currently several tools do not accept
-this legal (since SystemVerilog 2009) construct. **For now** all derived
-parameters should use `parameter` with a comment `// derived parameter`
-and create a static assertion with the name prefix `paramCheck` somewhere
-within the module. An example is shown below.
+Derived parameters within the `module` declaration should use `localparam`.
+An example is shown below.
 
 ```systemverilog
-// ideal, but currently untenable declaration
 module modname #(
   parameter  int Depth  = 2048,         // 8kB default
   localparam int Aw     = $clog2(Depth) // derived parameter
 ) (
   ...
 );
-
-// current declaration method with assertion
-module modname #(
-  parameter  int Depth  = 2048,         // 8kB default
-  parameter  int Aw     = $clog2(Depth) // derived parameter
-) (
-  ...
-);
-
-  `ASSERT_INIT(paramCheckAw, Aw == $clog2(Depth))
-
-  // alternate, expanded assertion macro
-
-  initial begin
-    paramCheckAw: assert (Aw == $clog2(Depth)) \
-      else $error("Assert failed: [%m] paramCheckAw, (Aw == $clog2(Depth))")
-  end
-
-  ...
 
 endmodule
 ```
