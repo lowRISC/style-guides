@@ -1777,7 +1777,7 @@ increment.
 assert `X` to indicate "don't care" to synthesis in any case.  In order to flag
 and detect invalid conditions, rather than assign and propagate `X` values,
 designs should fully define all signal values and make extensive use of SVAs to
-indicate the invalid conditions. ***
+indicate the invalid conditions.***
 
 If not strictly controlled, the use of `X` assignments in RTL to flag invalid or
 don't care conditions can lead to simulation/synthesis mismatches.
