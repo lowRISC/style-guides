@@ -116,6 +116,7 @@ representation of this style guide.
     - [Active-Low Signals](#active-low-signals)
     - [Differential Pairs](#differential-pairs)
     - [Delays](#delays)
+    - [Wildcard import of packages](#wildcard-import-of-packages)
   - [Appendix - Condensed Style Guide](#appendix---condensed-style-guide)
     - [Basic Style Elements](#basic-style-elements)
     - [Construct Naming](#construct-naming)
@@ -2188,7 +2189,6 @@ These language features are considered problematic and their use is discouraged
 unless otherwise noted:
 
 -   Interfaces.
--   Wildcard import (of packages), eg. `import my_pkg::*;`.
 -   The `alias` statement.
 -   `case inside` is broken inside some FPGA compile tools.
 
@@ -2492,6 +2492,85 @@ always_ff @(posedge clk) begin
   data_valid_q2 <= data_valid_q;
   data_valid_q3 <= data_valid_q2;
 end
+```
+
+### Wildcard import of packages
+
+The wildcard import syntax, e.g. `import ip_pkg::*;` is only allowed where the
+package is part of the same IP as the module that uses that package.  Wildcard
+import statement must be placed in the module header or in the module body.
+
+&#x1f44d;
+```systemverilog {.good}
+// mod_a_pkg.sv and mod_a.sv are in the same IP.
+// Packages can be imported in the module declaration if access to
+// unqualified types is needed in the port list.
+
+// mod_a_pkg.sv
+package mod_a_pkg;
+
+  typedef struct packed {
+    ...
+  } a_req_t;
+endpackage
+
+// mod_a.sv
+module mod_a
+  import mod_a_pkg::*;
+(
+  ...
+  a_req_t a_req,
+  ...
+);
+
+endmodule
+```
+
+&#x1f44d;
+```systemverilog {.good}
+// mod_a
+module mod_a ();
+
+  // mod_a_pkg.sv and mod_a.sv are in the same IP.
+  import mod_a_pkg::*;
+
+  ...
+
+  a_req_t a_req;
+
+endmodule
+```
+
+Other than the cases above, wildcard imports are not allowed. For instance,
+the example below may create a name collision in the module following `mod_a`
+in the source list.
+
+&#x1f44e;
+```systemverilog {.bad}
+// mod_a.sv
+import mod_a_pkg::*; // not allowed: imported to $root scope.
+
+module mod_a ();
+
+endmodule
+```
+
+Other bad examples:
+
+&#x1f44e;
+```systemverilog {.bad}
+// wildcard import for other packages outside of the IP
+module mod_a import mod_b_pkg::*; ();
+```
+
+&#x1f44e;
+```systemverilog {.bad}
+module mod_a ();
+
+  // not allowed: wildcard import of a package from a different IP
+  import mod_b_pkg::*;
+
+endmodule
 ```
 
 ### Assertion Macros
