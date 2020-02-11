@@ -2041,10 +2041,6 @@ performs exact matches for undriven `X` inputs. While this does not completely
 fix the problems with symmetric wildcard matching, it is harder to accidentally
 produce a `Z` input than an `X` input, so this form is preferred.
 
-The SystemVerilog-2012 `case-inside` construct should not be use used yet. It
-implements asymmetric wildcard matching, so that only `X`s in the case-items
-will behave as wildcards. Unfortunately, tool support for `case-inside` is
-not universal yet.
 
 References:
 
@@ -2190,7 +2186,6 @@ unless otherwise noted:
 
 -   Interfaces.
 -   The `alias` statement.
--   `case inside` is broken inside some FPGA compile tools.
 
 #### Floating begin-end blocks
 
