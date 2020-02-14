@@ -163,7 +163,7 @@ In particular, we inherit these specific formatting guidelines:
 *   Maintain consistent and good
     [punctuation, spelling, and grammar](https://google.github.io/styleguide/cppguide.html#Punctuation,_Spelling_and_Grammar)
     (within comments).
-*   Use standard formatting for [comments](#comments).
+*   Use standard formatting for [comments](#comments), including C-like formatting for [TODO](https://google.github.io/styleguide/cppguide.html#TODO_Comments) and [deprecation](https://google.github.io/styleguide/cppguide.html#Deprecation_Comments).
 
 ### Style Guide Exceptions
 
@@ -934,7 +934,7 @@ endmodule
 | Named code blocks                    | `lower_snake_case`      |
 | \`define macros                      | `ALL_CAPS`              |
 | Tunable parameters for parameterized modules, classes, and interfaces | `UpperCamelCase` |
-| Constants                            | `ALL_CAPS`              |
+| Constants                            | `ALL_CAPS` or `UpperCamelCase` |
 | Enumeration types                    | `lower_snake_case_e`    |
 | Other typedef types                  | `lower_snake_case_t`    |
 | Enumerated value names               | `UpperCamelCase`        |
@@ -963,7 +963,17 @@ Define project-wide constants in the project's main package.
 Other packages may also be declared with their own `parameter` constants to
 facilitate the creation of IP that may be re-used across many projects.
 
-The naming convention for all immutable constants is to use `ALL_CAPS`.
+The preferred naming convention for all immutable constants is to use `ALL_CAPS`, but there are times when the use of `UpperCamelCase` might be considered more natural.
+
+| Constant Type | Style Preference | Conversation |
+| ---- | ---- | ---- |
+| \`define            | `ALL_CAPS`       | Truly constant |
+| module parameter    | `UpperCamelCase` | truly modifiable by instantiation, not constant |
+| derived localparam  | `UpperCamelCase` | while not modified directly, still tracks module parameter |
+| tuneable localparam | `UpperCamelCase` | while not expected to change upon final RTL version, is used by designer to explore the design space conveniently |
+| true localparam constant | `ALL_CAPS`  | Example `localparam OP_JALR = 8'hA0;` |
+| enum member true constant | `ALL_CAPS` | Example `typedef enum ... { OP_JALR = 8'hA0;` |
+| enum set member | `ALL_CAPS` or `UpperCamelCase`     | Example `typedef enum ... { ST_IDLE, ST_FRAME_START, ST_DYN_INSTR_READ ...`, `typedef enum ... { StIdle, StFrameStart, StDynInstrRead...`. A collection of arbitrary values, could be either convention. |
 
 The units for a constant should be described in the symbol name, unless the
 constant is unitless or the units are "bits." For example, `FooLengthBytes`.
@@ -1140,7 +1150,7 @@ endmodule // simple
 
 ### Enumerations
 
-***Name enumeration types `snake_case_e`.  Name enumeration constants
+***Name enumeration types `snake_case_e`.  Name enumeration values `ALL_CAPS` or
 `UpperCamelCase`.***
 
 Always name `enum` types using `typedef`. The storage type of any enumerated
@@ -1153,9 +1163,32 @@ other places throughout the project and across projects.
 Enumeration type names should contain only lower-case alphanumeric characters
 and underscores. You must suffix enumeration type names with `_e`.
 
-Enumeration value names (constants) should be `UpperCamelCase`, for example,
-`ReadyToSend`. This indicates that the values are neither overrideable nor
-assignable.
+Enumeration value names (constants) should typically be `ALL_CAPS`, for example,
+`READY_TO_SEND`, to reflect their constant nature, especially for truly unchangeable
+values like defined opcode assignments.  There are times when `UpperCamelCase`
+might be preferred, when the enumerated type's assigned value is effectively a
+don't care to the designer, like state machine values.  See the conversation on
+[constants](#constants) for a discussion on how to think of this recommendation.
+
+&#x1f44d;
+```systemverilog {.good}
+typedef enum logic [7:0] {  // 8-bit opcodes
+  OP_JALR = 8'hA0,
+  OP_ADDI = 8'h47,
+  OP_LDW  = 8'h0B
+} opcode_e;
+opcode_e op_val;
+```
+
+&#x1f44d;
+```systemverilog {.good}
+typedef enum logic [1:0] {  // A 2-bit enumerated type
+  ACC_WRITE,
+  ACC_READ,
+  ACC_PAUSE
+} access_e; // new named type is created
+access_e req_access, resp_access;
+```
 
 &#x1f44d;
 ```systemverilog {.good}
@@ -1263,8 +1296,8 @@ Exceptions to this convention are expected, such as:
 *   When connecting a port to an element of an array of signals.
 
 *   When mapping a generic port name to something more specific to the design.
-    For example, two generic blocks, one with a `master_bus` port and one with a
-    `slave_bus` port might be connected by a `foo_bar_bus` signal.
+    For example, two generic blocks, one with a `host_bus` port and one with a
+    `device_bus` port might be connected by a `foo_bar_bus` signal.
 
 In each exceptional case, care should be taken to make the mapping of port names
 to signal names as unambiguous and consistent as possible.
