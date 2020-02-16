@@ -1036,7 +1036,7 @@ Examples of when to use parameterized modules:
 Explicitly declare the type for parameters.
 
 Use the type of the parameter to help constrain the legal range. E.g. `int
-unsigned` for general non-negative integer valuess, `bit` for boolean values.
+unsigned` for general non-negative integer values, `bit` for boolean values.
 Any further restrictions on tuneable parameter values must be documented with
 assertions.
 
@@ -1596,7 +1596,7 @@ my_module i_module (
 #### Do not use multi-bit signals in a boolean context.
 
 Rather than letting boolean operations and if expressions reduce a multi-bit
-signal to a single bit, explictly compare the multi-bit signal to 0. The
+signal to a single bit, explicitly compare the multi-bit signal to 0. The
 implicit conversion can hide subtle logic bugs.
 
 Examples;
@@ -1686,7 +1686,7 @@ Never mix assignment types within a block declaration.
 A sequential block (a block that latches state on a clock edge) must exclusively
 use non-block assignments, as defined in the Sequential Logic section below.
 
-Purely combinational blocks must exclusively use blocking assigments.
+Purely combinational blocks must exclusively use blocking assignments.
 
 This is one of Cliff Cumming's [Golden Rules of
 Verilog](http://www.ece.cmu.edu/~ece447/s13/lib/exe/fetch.php?media=synth-verilog-cummins.pdf).
