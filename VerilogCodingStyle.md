@@ -103,6 +103,7 @@ representation of this style guide.
     - [Generate Constructs](#generate-constructs)
     - [Signed Arithmetic](#signed-arithmetic)
     - [Number Formatting](#number-formatting)
+    - [Functions and Tasks](#functions-and-tasks)
     - [Problematic Language Features and Constructs](#problematic-language-features-and-constructs)
       - [Floating begin-end blocks](#floating-begin-end-blocks)
   - [Design Conventions](#design-conventions)
@@ -2289,6 +2290,156 @@ always_comb begin
     addr2 = 40'h41_c000_0000;
   end
 end
+```
+
+### Functions and Tasks
+
+The following section applies to synthesizable RTL only. See the [Coding Style
+Guide for Design Verification](DVCodingStyle.md) for DV usage.
+
+***In synthesizable RTL the use of functions is allowed, provided they are declared
+`automatic`. Tasks should not be used.***
+
+Functions must be declared in either a package or inside a module. A package is
+appropriate where the function relates to other definitions in the package and
+could be useful to multiple modules (even if it's currently only used by one). A
+module is appropriate where the function specifically relates to the internals
+of that module.
+
+Functions should aim to conceptually represent a reusable block of combinational
+logic.
+
+Storage types must be explicitly declared for all arguments and the function
+return value. All types must be 4-state data types, either `logic` or types
+derived from `logic` (such as appropriate `struct`, `enum` or `typedef` types).
+
+Do not use `output`, `inout`, or `ref` on function arguments. All functions
+should only consume inputs and produce one output. `input` is the default and is
+not required on the function arguments.
+
+
+&#x1f44e;
+```systemverilog {.bad}
+// - Doesn't have explicit storage type on `a` or `b` or return type
+// - `b` being used as `output` argument
+// - `input` not required on `a`
+function automatic [2:0] foo(input [2:0] a, [2:0] b);
+  b = b + 1;
+  return a + b;
+endfunction
+```
+
+&#x1f44e;
+```systemverilog {.bad}
+// - Doesn't have explicit storage type on `a`, `b` or `c`
+// - Uses `output` on `c`
+// - `input` not required on `a` and `b`
+function automatic logic [2:0] foo(input [2:0] a, input [2:0] b, output [2:0] c);
+  c = a - b;
+  return a + b;
+endfunction
+```
+
+&#x1f44e;
+```systemverilog {.bad}
+// - Uses 2-state data type `int` for `a`
+function automatic logic [2:0] foo(int a, logic [2:0] b);
+  return a + b;
+endfunction
+```
+
+&#x1f44d;
+```systemverilog {.good}
+function automatic logic [2:0] foo(logic [2:0] a, logic [2:0] b);
+ return a ^ b;
+endfunction
+```
+
+&#x1f44d;
+```systemverilog {.good}
+typedef logic [2:0] bar_t;
+
+typedef struct packed {
+  logic [2:0] field;
+} baz_t;
+
+function automatic logic [2:0] foo(bar_t a, baz_t b);
+  return a + b.field;
+endfunction
+```
+
+Data should be returned from a function using an explicit `return result` style.
+Do not use a `function_name = result` style.
+
+&#x1f44e;
+```systemverilog {.bad}
+function automatic logic [2:0] foo(logic [2:0] a, logic [2:0] b);
+  if (a == 3'd2) begin
+    foo = b;
+  end else begin
+    foo = a ^ b;
+  end
+endfunction
+```
+
+&#x1f44d;
+```systemverilog {.good}
+function automatic logic [2:0] foo(logic [2:0] a, logic [2:0] b);
+  logic [2:0] result;
+
+  if (a == 3'd2) begin
+    result = b;
+  end else begin
+    result = a ^ b;
+  end
+
+  return result;
+endfunction
+```
+
+All local variables must be assigned in all code paths, either through an
+initial assignment or through the use of `else` and `default:` for `if` and
+`case` statements.
+
+&#x1f44d;
+```systemverilog {.good}
+function automatic logic [2:0] foo(logic [2:0] a, logic [2:0] b);
+  logic [2:0] local_var_1;
+  logic [2:0] local_var_2;
+
+  local_var_1 = 3'd0;
+
+  if (a == 0) begin
+    local_var_1 = 3'd2;
+  end
+
+  unique case(b)
+    3'd0:    local_var_2 = 3'd1;
+    3'd1:    local_var_2 = 3'd3;
+    default: local_var_2 = 3'd0;
+  endcase
+
+  return local_var_1 + local_var_2;
+endfunction
+```
+
+&#x1f44e;
+```systemverilog {.bad}
+function automatic logic [2:0] foo(logic [2:0] a, logic [2:0] b);
+  logic [2:0] local_var_1;
+  logic [2:0] local_var_2;
+
+  if (a == 0) begin
+    local_var_1 = 3'd2;
+  end
+
+  unique case(b)
+    3'd0:    local_var_2 = 3'd1;
+    3'd1:    local_var_2 = 3'd3;
+  endcase
+
+  return local_var_1 + local_var_2;
+endfunction
 ```
 
 ### Problematic Language Features and Constructs
