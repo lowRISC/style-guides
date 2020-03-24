@@ -966,12 +966,16 @@ facilitate the creation of IP that may be re-used across many projects.
 
 The preferred naming convention for all immutable constants is to use `ALL_CAPS`, but there are times when the use of `UpperCamelCase` might be considered more natural.
 
+The naming convention for parameter and localparam allows for the use of ALL_CAPS or UpperCamelCase.
+UpperCamelCase is the preferred style for mutable parameters, but there is allowance for ALL_CAPS to accommodate the common style found in other code bases.
+
+
 | Constant Type | Style Preference | Conversation |
 | ---- | ---- | ---- |
 | \`define            | `ALL_CAPS`       | Truly constant |
-| module parameter    | `UpperCamelCase` | truly modifiable by instantiation, not constant |
-| derived localparam  | `UpperCamelCase` | while not modified directly, still tracks module parameter |
-| tuneable localparam | `UpperCamelCase` | while not expected to change upon final RTL version, is used by designer to explore the design space conveniently |
+| module parameter    | `UpperCamelCase` or `ALL_CAPS` | truly modifiable by instantiation, not constant |
+| derived localparam  | `UpperCamelCase` or `ALL_CAPS` | while not modified directly, still tracks module parameter |
+| tuneable localparam | `UpperCamelCase` or `ALL_CAPS` | while not expected to change upon final RTL version, is used by designer to explore the design space conveniently |
 | true localparam constant | `ALL_CAPS`  | Example `localparam OP_JALR = 8'hA0;` |
 | enum member true constant | `ALL_CAPS` | Example `typedef enum ... { OP_JALR = 8'hA0;` |
 | enum set member | `ALL_CAPS` or `UpperCamelCase`     | Example `typedef enum ... { ST_IDLE, ST_FRAME_START, ST_DYN_INSTR_READ ...`, `typedef enum ... { StIdle, StFrameStart, StDynInstrRead...`. A collection of arbitrary values, could be either convention. |
