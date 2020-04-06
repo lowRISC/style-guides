@@ -729,7 +729,7 @@ Good constraint coding style is important for faster simulations and better
 simulation performance.
 
 1.  Give all constraints a name that matches with what is being constrained, and
-    prefix the constraint name with `_c`.
+    suffix the constraint name with `_c`.
 
     ```systemverilog
     constraint num_packets_c {
