@@ -22,6 +22,7 @@ following the [UVM methodology](https://www.accellera.org/images//downloads/stan
     * [Guidelines for UVM library macros](#guidelines-for-uvm-library-macros)
     * [Guidelines for macros within dv_macros.svh](#guidelines-for-macros-within-dv_macrossvh)
     * [General macro use guidelines](#general-macro-use-guidelines)
+    * [Typical gotchas with macro usage](#typical-gotchas-with-macro-usage)
   * [Factory](#factory)
   * [Configuration Mechanism](#configuration-mechanism)
   * [Sequences](#sequences)
@@ -454,13 +455,185 @@ utility macros for even more common code sequences.
         `DV_CHECK_*` macros, the macro must be named in `UPPER_SNAKE_CASE`.
 2.  Macro vs. Parameters:
     *   If the intent is to define a constant that is a basic data type or
-        that is the result of an expression involving basic data types, a parameter
-        (or localparam) must be used, depending on where the constants are being defined.
+        that is the result of an expression involving basic data types, a
+        parameter (or localparam) must be used, depending on where the
+        constants are being defined.
     *   If the intent is to abstract away a code snippet or to represent a
         slice of an array, a macro must be used.
         If the macro is defined in a local perspective, it must be undefined at
         the end of the file, otherwise it will pollute the global namespace.
 
+#### Typical gotchas with macro usage:
+
+While it is better to avoid macros altogether, they do make our lives easier by
+shortening pieces of repeated code, in a manner that cannot be achieved with a
+function or a task. In general, the following describes the best practices to
+avoid common gotchas with macro usage.
+
+1.  Always wrap macro arguments in parentheses. If the macro evaluates to an
+    expression, also wrap the whole expansion in parentheses.The following
+    example illustrates how failing to do this can cause an unexpected
+    behavior.
+
+    :-1:
+    ```systemverilog
+    `define AND(a, b) a && b
+
+    assign x = `AND(p || q, r) || s;
+    // Bad: Wrong operator precedence! This results in: p || (q && r) || s
+    //      which is not equal to ((p || q) && r) || s.
+    ```
+    :+1:
+    ```systemverilog
+    `define AND(a, b) ((a) && (b))
+
+    assign x = `AND(p || q, r) || s;
+    // Good: Output in-line with the expectation.
+    ```
+2.  Macro usage scope and avoiding namespace collisions.
+
+    Macros have a global scope regardless of where they are defined. Once
+    compiled, they are visible to ALL subsequent sources in the same
+    compilation unit as well as to all subsequent compilation units. Hence,
+    care must be taken to prevent macro re-definitions. Some tools do not even
+    warn about name collisions, causing unnecessary debug overhead.
+
+    *   Macro names must be appropriately prefixed with a thematically chosen
+        string. It is typical to use the file name or the package name as the
+        prefix string for all macros defined within that source.
+
+        :-1:
+        ```systemverilog
+        // file: dv_macros.h
+        `define STRINGIFY(s) `"s`"
+        // Bad: UVM library code also defines a macro with the same name.
+        //      Depending on the tool, this may be flagged as an error.
+        ```
+
+        :+1:
+        ```systemverilog
+        // file: dv_macros.h
+        `define DV_STRINGIFY(s) `"s`"
+        ```
+
+    *   If the scope of the macros defined are global in nature (useful for
+        the entire testbench), then place them in a separate SystemVerilog
+        header file with `` `ifndef`` guards. It must only contain macro
+        definitions and nothing else. The file name must be suffixed with
+        `_macros` and have the `.svh` extension to denote that it is a header
+        file.
+
+        :-1:
+        ```systemverilog
+        // file: dv_macros.h
+        automatic function void get_nco();
+          ...
+        endfunction
+        // Bad: Putting functions and tasks in a header file that is potentially
+        //      included multiple times.
+
+        `define DV_FOO(...) ...
+        // Bad: No ifndef guard. Macro re-definition warnings will be thrown if
+        //      this header file is included in multiple sources.
+        ```
+
+        :+1:
+        ```systemverilog
+        // file: dv_macros.svh
+        `ifndef DV_FOO
+          `define DV_FOO(...) ...
+        `endif
+
+        `ifndef DV_BAR
+          `define DV_BAR xyz
+        `endif
+        ```
+
+    *   If the scope of the macros defined is limited to a package or source
+        (individual interface, module or a class), then place them at the top of
+        the file. Always `` `undef`` them at the end of the file so that they
+        are no longer visible to subsequent sources during compilation. Do not
+        put `` `ifndef`` guards on these macros, so that the re-definitions
+        if encountered, are flagged.
+
+        :-1:
+        ```systemverilog
+        // file: foo_init_seq.sv
+        `ifndef GET_DATA
+          `define GET_DATA(baz) ...
+        `endif
+        // Bad: Macro-redefinition if encountered, will be ignored due to the
+        //      ifndef guard. Previously defined macro is invoked instead.
+        // Bad: Macro name is not specific enough.
+
+        class foo_init_seq;
+          ...
+        endclass
+        // EOF
+        // Bad: Macro is not undefined at the end of the file.
+        ```
+
+        :+1:
+        ```systemverilog
+        // file: foo_init_seq.sv
+        `define GET_FOO_TX_FIFO_DATA_AFTER_OP(baz) ...
+
+        class foo_init_seq;
+          ...
+        endclass
+
+        `undef GET_FOO_TX_FIFO_DATA_AFTER_OP
+        ```
+
+        :+1:
+        ```systemverilog
+        // file: foo_env_pkg.sv
+        `define GET_FOO_TX_FIFO_DATA(baz) ...
+
+        ...
+
+        // Package sources
+        `include "foo_env_cfg.sv"
+        ...
+        `include "foo_scoreboard.sv"
+        `include "foo_env.sv"
+
+
+        `undef GET_FOO_TX_FIFO_DATA
+        // Good: Only the package sources can invoke this macro. It is not
+                 visible in any other code.
+        ```
+
+3.  Wrap macros that resolve to multiple statements within `begin` and `end`.
+
+    Multi-statement macros are typically problematic when invoked in a single
+    line conditional expression without `begin`..`end`. It is better to preempt
+    this bug by wrapping the macro definition itself in `begin`..`end`.
+
+    :-1:
+    ```systemverilog
+    `define UPDATE_VALUES(a, b) \
+      a = 88;                   \
+      b = 1955;
+
+    if (power_gw == 1.21) `UPDATE_VALUES(speed, year)
+    // Great Scott! The year is unconditionally set to 1955.
+    ```
+
+    :+1:
+    ```systemverilog
+    `define UPDATE_VALUES(a, b) \
+      begin                     \
+        a = 88;                 \
+        b = 1955;               \
+      end
+
+    if (power_gw == 1.21) `UPDATE_VALUES(speed, year)
+    // Good: Both values are set only if the condition is met.
+    ```
+
+Please see this [paper](https://www.veripool.org/papers/Preproc_Good_Evil_SNUGBos10_pres.pdf)
+for more details and examples.
 
 ### Factory
 
