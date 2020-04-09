@@ -22,6 +22,7 @@ following the [UVM methodology](https://www.accellera.org/images//downloads/stan
     * [Guidelines for UVM library macros](#guidelines-for-uvm-library-macros)
     * [Guidelines for macros within dv_macros.svh](#guidelines-for-macros-within-dv_macrossvh)
     * [General macro use guidelines](#general-macro-use-guidelines)
+    * [Typical gotchas with macro usage](#typical-gotchas-with-macro-usage)
   * [Factory](#factory)
   * [Configuration Mechanism](#configuration-mechanism)
   * [Sequences](#sequences)
@@ -461,6 +462,125 @@ utility macros for even more common code sequences.
         If the macro is defined in a local perspective, it must be undefined at
         the end of the file, otherwise it will pollute the global namespace.
 
+#### Typical gotchas with macro usage:
+
+While it is better to avoid macros altogether, they do make our lives easy by
+shortening pieces of repeated code, in a manner that cannot be achieved with a
+function or a task. In general, the following describes the best practices to
+avoid common gotchas with macro usage.
+
+1.  Always wrap macro arguments **and** the output as applicable, within
+    parenthesis.
+
+    The following example illustrates how not wrapping the formal macro
+    arguments in parenthesis can cause unexpected behavior.
+    :-1:
+    ```systemverilog
+    `define AND(a, b) a && b
+
+    assign x = `AND(p || q, r) || s;
+    // Gotcha! wrong operator precedence! This results in: p || (q && r) || s which
+    // is different from what was originally intended: ((p || q) && r) || s.
+    ```
+    :+1:
+    ```systemverilog
+    `define AND(a, b) ((a) && (b))
+
+    assign x = `AND(p || q, r) || s;
+    // Correct: ((p || q) && (r)) || s
+    ```
+2.  Macro usage scope and avoiding namespace collisions.
+
+    *   If macros are defined for use in multiple sources, place them in a
+        separate SystemVerilog header file with appropriate `ifdef` guards.
+
+        This header file must not be compilation unit (provided as an input to
+        the tool for compilation). Instead, it should be `` `included`` in the
+        package, module or the interface that intends to invoke them.
+
+        Macro names should be appropriately prefixed with a string to avoid
+        potential namespace collisions. It is typical to use the file name for
+        the prefix string.
+
+        :-1:
+        ```systemverilog
+        `define STRINGIFY(s) `"s`"
+        // Gotcha! UVM library code also defines a macro with the same name.
+        // Depending on the tool, this may be flagged as an error. You may need
+        // this to support non-UVM testbench designs.
+        ```
+        :+1:
+        ```systemverilog
+        // file: dv_macros.h
+        `define DV_STRINGIFY(s) `"s`"
+        ```
+    *   If the scope of the macro usage is limited to the file, `undef` them
+        at the end of the file.
+
+        Macros have a global scope regardless of where they are defined. Some
+        tools do not even warn about namespace collisions, causing unnecessary
+        debug overhead. It is a good practice to `undef` macros at the end of
+        the file so that they are no longer visible to all subsequent
+        compilation units.
+3.  Avoid passing expressions as formal macro arguments.
+
+    As illustrated in the example below, it is better to avoid passing
+    expressions as arguments, since they are replaced verbatim. The macros may
+    reference the input arguments in multiple places, casuing the expressions to
+    be evaluated multiple times, resulting in unforeseen side effects.
+
+    :-1:
+    ```systemverilog
+    `define CHECK_AND_UPDATE(a, b) if (a != b) a = b;
+
+    `CHECK_AND_UPDATE(x, y++)
+    // Gotcha! This results in: if (x != y++) x = y++; x and y now have totally
+    // different and unexpected values.
+    ```
+    :+1:
+    ```systemverilog
+    `define CHECK_AND_UPDATE(a, b) if (a != b) a = b;
+
+    y++;
+    `CHECK_AND_UPDATE(x, y)
+    ```
+4.  Wrap multi-line macros in `begin` and `end`.
+
+    Multi-line macros are typically problematic when invoked in a conditional
+    statement. Here's an example:
+
+    :-1:
+    ```systemverilog
+    `define UPDATE_VALUES(a, b) \
+      a = 88;                   \
+      b = 1955;
+
+    if (power == 1.21) `UPDATE_VALUES(speed, year)
+    // Gotcha! The year is unconditionally set to 1955.
+    ```
+    :+1:
+    ```systemverilog
+    `define UPDATE_VALUES(a, b) \
+      begin                     \
+        a = 88;                 \
+        b = 1955;               \
+      end
+
+    if (power == 1.21) `UPDATE_VALUES(speed, year)
+    ```
+5.  Never invoke macros on the same line as the conditonal statement it is invoked
+    within. Always use `begin` and `end` when doing so.
+
+    This is a supplimental solution to avoid the previous gotcha.
+
+    :+1:
+    ```systemverilog
+    if (power == 1.21) begin
+      `UPDATE_VALUES(speed, year)
+    end
+    ```
+Please see this [paper](https://www.veripool.org/papers/Preproc_Good_Evil_SNUGBos10_pres.pdf)
+for more details and examples.
 
 ### Factory
 
