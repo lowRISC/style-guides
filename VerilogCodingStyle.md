@@ -995,7 +995,7 @@ endpackage
 #### Parameterized Objects (modules, etc.)
 
 ***Use `parameter` to parameterize, and `localparam` to declare
-module-scoped constants.***
+module-scoped constants. Within a package, use `parameter`.***
 
 You can create parameterized modules, classes, and interfaces to facilitate
 design re-use.
@@ -1024,7 +1024,7 @@ endmodule
 
 Use [package parameters](#constants) to transmit global constants through a
 hierarchy instead of parameters. To declare a constant whose scope is internal
-to the module, [use `localparam` instead](#constants).
+to the particular SystemVerilog module, [use `localparam` instead](#constants).
 
 Examples of when to use parameterized modules:
 
