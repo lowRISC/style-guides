@@ -247,8 +247,8 @@ having to recompile and allows testlists to be created for regression runs.
     uvm_field_array_int`, etc. within `uvm_object/component_utils_begin` and
     `uvm_object/component_utils_end`.
 2.  For all field automation macros, use `UVM_DEFAULT` as the flag argument.
-    For example, if you want to enable everything except comparing and printing for
-    a `rx_delay` field, the macro would look like:
+    For example, if it is desired that everything except comparing and printing
+    be enabled for some `rx_delay` field, the macro would look like this:
 
     ```systemverilog
     `uvm_field_int(rx_delay, UVM_DEFAULT | UVM_NOCOMPARE | UVM_NOPRINT)
@@ -546,7 +546,7 @@ When using the UVM configuration database, these guidelines should be followed:
     locations where they are needed. It should not be used to pass integers,
     strings, or other basic data types, since it is much easier for namespace
     collisions to occur when using lower level types.
-5.  You must always check for success when accessing the `uvm_config_db`.
+5.  Checks for success must always be performed when using the `uvm_config_db`.
     If the lookup fails, issue a `uvm_fatal` to terminate the simulation.
     This should be done as follows:
 
@@ -594,30 +594,105 @@ cause race conditions if there are any parallel threads.
 
 ### Objections and Coordinating End of Test
 
-1.  At a high level, a phase should not end when either there is more stimulus
-    to send during that phase or the DUT has yet to respond to some stimulus that
-    has been sent.
-    To prevent a phase from ending in the former case, raise and lower objections
-    inside tests.
-    To prevent a phase from ending in the latter case, raise objections in the
-    scoreboard whenever expect queues are not empty and lower them when they are empty.
-2.  It is recommended to avoid using objections in drivers or monitors
-    for performance reasons they should be used inside these components
-    sparingly and only when needed.
-    (Note: this point is still under discussion, and is still TBD)
-3.  If a sequence needs to raise/drop objections, it should call
-    `raise_objection` in its `pre_start()` method and `drop_objection` in its
-    `post_start()` method. A good alternative to this is to call
-    `set_automatic_phase_objection(1)` in the sequence constructor.
-4.  Always perform the test `if (get_starting_phase() != null)` before calling
-    `raise_objection` or `drop_objection` within a sequence.
-5.  When starting a sequence that can raise and drop objections, if you want
-    the sequence to raise and drop objections, set the `starting_phase` member of
-    the sequence object the `<sequence_handle>.set_starting_phase(<uvm_phase>)`
-    before starting the sequence.
-6.  To avoid reimplementing objection functionality in multiple sequence classes,
-    create a parent sequence that implements this functionality for its derivatives.
-7.  When calling `raise_objection` or `drop_objection`, you must pass a string
+
+As a general principle, a phase should not end when either there is more stimulus to
+send during that phase or the DUT has yet to respond to some stimulus that has
+been sent.
+
+To prevent a phase from ending when there is more stimulus to send, a test class
+must raise and lower objections.
+
+To prevent a phase from ending before the DUT has responded to some stimulus,
+classes derived from `uvm_component` should raise and lower objections  in their
+`phases_ready_to_end()` method.
+
+It is also recommended to only include objections in the monitor component.
+When using this approach, these guidelines should be followed:
+
+1.  The monitor's `phase_ready_to_end()` method should implement a watchdog timer
+    that raises an objection if any traffic is seen on the bus and lowers it once
+    no traffic is seen within the timeout period. If traffic is seen, the
+    watchdog resets its timer.
+    Refer to the example below:
+
+    ```systemverilog
+    // Example code for the monitor class.
+    // This code assumes that the associated configuration object has an integer
+    // property "ok_to_end_delay_ns", which gives the window timeout in
+    // nanoseconds.
+
+    protected bit ok_to_end = 1'b1;
+    protected bit watchdog_done = 1'b0;
+
+    function void phase_ready_to_end(uvm_phase phase);
+     if (phase.is(uvm_run_phase::get())) begin
+       if (watchdog_done) fork
+         monitor_ready_to_end();
+       join_none
+       if (!ok_to_end || !watchdog_done) begin
+         phase.raise_objection(this, $sformatf("%s objection raised", `gfn));
+         fork
+           begin
+             // wait until ok_to_end is set
+             watchdog_ok_to_end();
+             phase.drop_objection(this, $sformatf("%s, objection dropped",
+             `gfn));
+           end
+         join_none
+       end
+     end
+
+    endfunction
+
+    // This watchdog waits for ok_to_end_delay_ns nanoseconds while checking for
+    // any traffic seen on the bus during this period.
+    // If traffic is seen, the watchdog will restart until it sees no traffic.
+    task watchdog_ok_to_end();
+      fork
+        begin : isolation_fork
+          bit watchdog_reset;
+          fork
+            forever begin
+              // check bus interface for traffic
+              @(ok_to_end or watchdog_reset);
+              if (!ok_to_end && !watchdog_reset) watchdog_reset = 1;
+            end
+            forever begin
+              #(cfg.ok_to_end_delay_ns * 1ns);
+              if (!watchdog_reset) begin
+                break;
+              end else begin
+                watchdog_reset = 0;
+              end
+            end
+          join_any;
+          disable fork;
+
+          watchdog_done  = 1;
+        end : isolation_fork
+      join
+    endtask
+
+    // This task is invoked as a non-blocking thread when phase_ready_to_end()
+    // is first entered.
+    //
+    // This task should monitor the DUT's interface and control ok_to_end: it
+    // should be cleared whenever there are any pending transactions and
+    // set to 1 if there are no pending transactions.
+    virtual task monitor_ready_to_end();
+    endtask
+    ```
+
+2.  It is recommended not to use other objections in the scoreboard; the
+    scoreboard should just make use of information already available to it
+    (like fifo size, etc...) to determine when it is ready to end, as the
+    monitor has already guaranteed that no more traffic is seen on the bus.
+    These fifo checks should be checked during its `check_phase()`.
+
+The more general guidelines below should be followed when dealing with
+end-of-test timeouts or objections:
+
+1.  When calling `raise_objection` or `drop_objection`, a string must be passed
     as a second argument to describe the objection to help with debugging.
 
     ```systemverilog
@@ -626,14 +701,12 @@ cause race conditions if there are any parallel threads.
     phase.drop_objection(this, $sformatf("%s objection dropped", `gfn));
     ```
 
-8.  It is recommended, but not necessary, to use the built-in UVM timeout
-    mechanism, `uvm_root::set_timeout(<time_limit>, 1)`.
+2.  It is recommended to use the built-in UVM timeout mechanism,
+    `uvm_root::set_timeout(<time_limit>, 1)`.
     The base test in every testbench should specify a default timeout limit,
     which can be overridden by every derivative test.
     A standard plusarg `+UVM_TIMEOUT=...` is recommended to be used for this
     override mechanism.
-    Alternatively, some separate timeout mechanism can be created and utilized
-    within the testbench.
 
 
 ### Logging and Print Messages
@@ -803,9 +876,9 @@ subtle errors.
 
 ### Code Within Asserts
 
-For any randomization that is required, you must use the macros specified
-in the [Randomization Macros section](#macro-usage), do not use `assert()` to check
-manual randomization calls, use the provided macros instead.
+For any randomization that is required, the macros specified in the
+[Randomization Macros section](#macro-usage) must be used. Do not use `assert()`
+to check manual randomization calls, use the provided macros instead.
 More broadly, do not place any expression with side effects into an
 `assert()` statement.
 
