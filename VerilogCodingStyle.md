@@ -2533,14 +2533,16 @@ a check for `X` on the 4-state net before resolving to a 2-state variable.
 
 ### Logical vs. Bitwise
 
-***Use logical constructs for logical comparisons, bit-wise for data.***
+***Prefer logical constructs for logical comparisons, bit-wise for data.***
 
-Logical constructs (`!`, `||`, `&&`, `==`, `!=`) should be used for all
+Logical operators (`!`, `||`, `&&`, `==`, `!=`) should be used for all
 constructs that are evaluating logic (true or false) values, such as
-if clauses and ternary assignments.  Use bit-wise constructs (`~`, `|`,
-`&`, `^`) for all data constructs, even if scalar.
+if clauses and ternary assignments.  Prefer bit-wise operators (`~`, `|`,
+`&`, `^`) for all data constructs, even if scalar. Exceptions can be made
+where it is clear that the evaluated expression is to be used in a logical
+context.
 
-&#x1f44d;
+:+1:
 ```systemverilog {.good}
 always_ff @(posedge clk_i or negedge rst_ni) begin
   if (!rst_ni) begin
@@ -2561,7 +2563,7 @@ assign z = ((bool_a != bool_b) || bool_c) ? a : b;
 assign y = (a & ~b) | c;
 ```
 
-&#x1f44e;
+:-1:
 ```systemverilog {.bad}
 always_ff @(posedge clk_i or negedge rst_ni) begin
   if (~rst_ni) begin
@@ -2580,6 +2582,20 @@ end
 
 assign z = ((bool_a ^ bool_b) | bool_c) ? a : b;
 assign y = (a && !b) || c;
+```
+
+:+1:
+```systemverilog
+// allowed logical assignment for boolean test
+assign request_valid = !fifo_empty && data_available;
+
+always_comb begin
+  if (request_valid) begin
+    output_valid = 1'b1;
+  end else begin
+    output_valid = 1'b0;
+  end
+end
 ```
 
 
