@@ -406,22 +406,26 @@ four spaces, like this:
 ```systemverilog {.good}
 assign zulu = enabled && (
     alpha < bravo &&
-    charlie < delta);
+    charlie < delta
+);
 
 assign addr = addr_gen_function_with_many_params(
     thing, other_thing, long_parameter_name, x, y,
-    extra_param1, extra_param2);
+    extra_param1, extra_param2
+);
 
 assign structure = '{
     src: src,
     dest: dest,
-    default: '0};
+    default: '0
+};
 ```
 
 Or, if it improves readability, align the continued part of the expression with
 a grouping open parenthesis or brace, like this:
 
-```systemverilog
+:+1:
+```systemverilog {.good}
 assign zulu = enabled && (alpha < bravo &&
                           charlie < delta);
 
@@ -436,6 +440,26 @@ assign structure = '{src: src,
 
 Operators in a wrapped expression can be placed at either the end or the
 beginning of each line, but this must be done consistently within a file.
+
+Open syntax characters such as `{` or `(` that end one line of a multi-line
+expression should be terminated with close characters (`}`, `)`) on their
+own line. Examples:
+
+:+1:
+```systemverilog {.good}
+assign bus_concatenation = {
+    bus_valid,
+    bus_parity[7:0],
+    bus_valid[63:0]
+};
+
+inst_type inst_name1 (
+  .clk_i    (clk),
+  .data_valid_i(data_valid),
+  .data_value_i(data_value),
+  .data_ready_o(data_ready)
+);
+```
 
 #### Preprocessor Directives
 
