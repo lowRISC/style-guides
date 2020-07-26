@@ -1590,7 +1590,7 @@ Exceptions:
 
 *   When using parameterized widths, it is acceptable to simply use `1'b1` (e.g.
     when incrementing) rather than contrivances such as
-    `{{(Bus_width-1){1'b0}},1'b1}`
+    `{{(Bus_width-1){1'b0}}, 1'b1}`. Alternately it could be written as `Bus_width'(1)`.
 *   It is acceptable to use the '0 construct to create an automatic correctly
     sized zero.
 *   Literals assigned to integer variants (e.g. byte, shortint, int, integer,
@@ -1698,7 +1698,14 @@ is to silently drop the carry on assignment.
 Example:
 
 ```systemverilog
-assign abc = abc + 4'h1;
+logic [3:0] cnt_d, cnt_q;
+assign cnt_d = cnt_q + 4'h1;
+```
+
+Or you may explicitly express dropping the carry by using size casting.
+
+```systemverilog
+assign cnt_d = 4'(cnt_q + 4'h1);
 ```
 
 ### Blocking and Non-blocking Assignments
@@ -1722,6 +1729,10 @@ Verilog](http://www.ece.cmu.edu/~ece447/s13/lib/exe/fetch.php?media=synth-verilo
 
 Synthesizable design modules must be designed around a zero-delay simulation
 methodology. All forms of `#delay`, including `#0`, are not permitted.
+
+See Cliff Cumming's [Verilog Nonblocking Assignments With Delays, Myths &
+Mysteries](http://www.sunburst-design.com/papers/CummingsSNUG2002Boston_NBAwithDelays.pdf)
+for details.
 
 ### Sequential Logic (Latches)
 
@@ -2163,10 +2174,11 @@ always_comb begin
 end
 ```
 
-##### Wildcards in case items
+#### Wildcards in case items
 
-Use `case` instead of `casez` whenever wildcard operator behavior is not
-required. When wildcard behavior is needed, use `casez`.
+Use `case` if wildcard operator behavior is not needed. 
+Use `case inside` if wildcard operator behavior is needed.
+Use `casez` if wildcard operator behavior is needed and Verilog-2001 compatibility is required.
 
 When expressing a wildcard in a case item, use the '?' character since it more
 clearly expresses the intent.
@@ -2177,7 +2189,8 @@ such that an `X` in the case expression may match one or more case items.
 performs exact matches for undriven `X` inputs. While this does not completely
 fix the problems with symmetric wildcard matching, it is harder to accidentally
 produce a `Z` input than an `X` input, so this form is preferred.
-
+`case inside` does not treat either `X` or `Z` in the case expression as a
+wildcard, so this form is preferred over `casez`.
 
 References:
 
@@ -2247,12 +2260,13 @@ Example of implicit signed-to-unsigned casting:
 ```systemverilog
 logic signed [7:0]  a;
 logic               incr;
-logic signed [15:0] sum1, sum2;
+logic signed [15:0] sum1, sum2, sum3;
 initial begin
-  a = 8'sh80;
+  a = 8'sh80;                        // a = -128
   incr = 1'b1;
-  sum1 = a + incr;                   // sum1 = 16'h0081
-  sum2 = a + signed'({1'b0, incr});  // sum2 = 16'hFF81
+  sum1 = a + incr;                   // bad:  sum1 = 16'h0081 ( 129)
+  sum2 = a + signed'({1'b0, incr});  // good: sum2 = 16'hFF81 (-127)
+  sum3 = a + 8'sh01;                 // good: sum3 = sum2 (more straightforward)
 end
 ```
 
@@ -2543,8 +2557,18 @@ initialization. For example:
 &#x1f44d;
 ```systemverilog {.good}
 wire [7:0] sum = a + b;  // Continuous assignment
+```
 
-logic [7:0] acc = '0;  // Initialization
+&#x1f44e;
+```systemverilog {.bad}
+logic [7:0] sum = a + b; // Initialization (not synthesizable)
+```
+
+`sum` is initialized to sum of initial values of a and b.
+
+&#x1f44d;
+```systemverilog {.good}
+logic [7:0] acc = '0;    // Initialization (synthesizable on some FPGA tools)
 ```
 
 There are exceptions for places where `logic` is inappropriate. For example,
