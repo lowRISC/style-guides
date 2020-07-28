@@ -1706,6 +1706,10 @@ Verilog](http://www.ece.cmu.edu/~ece447/s13/lib/exe/fetch.php?media=synth-verilo
 Synthesizable design modules must be designed around a zero-delay simulation
 methodology. All forms of `#delay`, including `#0`, are not permitted.
 
+See Cliff Cumming's [Verilog Nonblocking Assignments With Delays, Myths &
+Mysteries](http://www.sunburst-design.com/papers/CummingsSNUG2002Boston_NBAwithDelays.pdf)
+for details.
+
 ### Sequential Logic (Latches)
 
 ***The use of latches is discouraged - use flip-flops when possible.***
