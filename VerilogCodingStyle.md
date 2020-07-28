@@ -2248,12 +2248,13 @@ Example of implicit signed-to-unsigned casting:
 ```systemverilog
 logic signed [7:0]  a;
 logic               incr;
-logic signed [15:0] sum1, sum2;
+logic signed [15:0] sum1, sum2, sum3;
 initial begin
-  a = 8'sh80;
+  a = 8'sh80;                        // a = -128
   incr = 1'b1;
-  sum1 = a + incr;                   // sum1 = 16'h0081
-  sum2 = a + signed'({1'b0, incr});  // sum2 = 16'hFF81
+  sum1 = a + incr;                   // sum1 = 16'h0081 ( 129)
+  sum2 = a + signed'({1'b0, incr});  // sum2 = 16'hFF81 (-127)
+  sum3 = a + 8'sh01;                 // sum3 = sum2 (but simpler)
 end
 ```
 
