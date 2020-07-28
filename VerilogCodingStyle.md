@@ -2146,10 +2146,11 @@ always_comb begin
 end
 ```
 
-##### Wildcards in case items
+#### Wildcards in case items
 
-Use `case` instead of `casez` whenever wildcard operator behavior is not
-required. When wildcard behavior is needed, use `casez`.
+Use `case` instead of `case inside` nor `casez` whenever wildcard operator
+behavior is not required. When wildcard behavior is needed, use `case inside`
+(or `casez` if only Verilog-2001 is supported).
 
 When expressing a wildcard in a case item, use the '?' character since it more
 clearly expresses the intent.
@@ -2160,7 +2161,8 @@ such that an `X` in the case expression may match one or more case items.
 performs exact matches for undriven `X` inputs. While this does not completely
 fix the problems with symmetric wildcard matching, it is harder to accidentally
 produce a `Z` input than an `X` input, so this form is preferred.
-
+`case inside` does not treat either `X` nor `Z` in the case extression as a
+wildcard, so this form is more preferred than `casez`.
 
 References:
 
