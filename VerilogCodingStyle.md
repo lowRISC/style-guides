@@ -2545,8 +2545,11 @@ initialization. For example:
 &#x1f44d;
 ```systemverilog {.good}
 wire [7:0] sum = a + b;  // Continuous assignment
+```
 
-logic [7:0] acc = '0;  // Initialization
+&#x1f44e;
+```systemverilog {.bad}
+logic [7:0] acc = '0;  // Initialization (not synthesizable)
 ```
 
 There are exceptions for places where `logic` is inappropriate. For example,
