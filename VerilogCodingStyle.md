@@ -1732,6 +1732,18 @@ an always block as occurring in a separate simulation event as the non-blocking
 assignment. This process makes some signals jump registers, potentially leading
 to total protonic reversal. That's bad.
 
+Exception: For a clock divider blocking assingment must be used not to case race condition.
+
+&#x1f44d;
+```systemverilog {.good}
+logic clk_div2;
+always_ff @(posedge clk or negedge rst_ni) begin
+  // only for a clock divider blocking assignment must be used not to cause race condition
+  if (!rst_ni) clk_div2 = 1'b0;
+  else         clk_div2 = ~clk_div2;
+end
+```
+
 Sequential statements for state assignments should only contain reset values and
 a next-state to state assignment, use a separate combinational-only block to
 generate that next-state value.
