@@ -1702,7 +1702,7 @@ logic [3:0] cnt, ncnt;
 assign ncnt = cnt + 4'h1;
 ```
 
-Or you may explicitly express to drop the carry by using size casting.
+Or you may explicitly express dropping the carry by using size casting.
 
 ```systemverilog
 assign ncnt = 4'(cnt + 4'h1);
@@ -1756,7 +1756,7 @@ an always block as occurring in a separate simulation event as the non-blocking
 assignment. This process makes some signals jump registers, potentially leading
 to total protonic reversal. That's bad.
 
-Exception: For a clock divider blocking assingment must be used not to case race condition.
+Exception: For a clock divider blocking assignment must be used not to case race condition.
 
 &#x1f44d;
 ```systemverilog {.good}
@@ -2276,9 +2276,9 @@ logic signed [15:0] sum1, sum2, sum3;
 initial begin
   a = 8'sh80;                        // a = -128
   incr = 1'b1;
-  sum1 = a + incr;                   // sum1 = 16'h0081 ( 129)
-  sum2 = a + signed'({1'b0, incr});  // sum2 = 16'hFF81 (-127)
-  sum3 = a + 8'sh01;                 // sum3 = sum2 (but simpler)
+  sum1 = a + incr;                   // bad:  sum1 = 16'h0081 ( 129)
+  sum2 = a + signed'({1'b0, incr});  // good: sum2 = 16'hFF81 (-127)
+  sum3 = a + 8'sh01;                 // good: sum3 = sum2 (more straightforward)
 end
 ```
 
