@@ -1756,7 +1756,7 @@ an always block as occurring in a separate simulation event as the non-blocking
 assignment. This process makes some signals jump registers, potentially leading
 to total protonic reversal. That's bad.
 
-Exception: For a clock divider blocking assignment must be used not to case race condition.
+Exception: For a clock divider blocking assignment must be used not to cause race condition.
 
 &#x1f44d;
 ```systemverilog {.good}
@@ -2201,7 +2201,7 @@ such that an `X` in the case expression may match one or more case items.
 performs exact matches for undriven `X` inputs. While this does not completely
 fix the problems with symmetric wildcard matching, it is harder to accidentally
 produce a `Z` input than an `X` input, so this form is preferred.
-`case inside` does not treat either `X` nor `Z` in the case extression as a
+`case inside` does not treat either `X` nor `Z` in the case expression as a
 wildcard, so this form is more preferred than `casez`.
 
 References:
