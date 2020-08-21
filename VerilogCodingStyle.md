@@ -1590,7 +1590,7 @@ Exceptions:
 
 *   When using parameterized widths, it is acceptable to simply use `1'b1` (e.g.
     when incrementing) rather than contrivances such as
-    `Bus_width'(1)`.
+    `{{(Bus_width-1){1'b0}}, 1'b1}`. Alternately it could be written as `Bus_width'(1)`.
 *   It is acceptable to use the '0 construct to create an automatic correctly
     sized zero.
 *   Literals assigned to integer variants (e.g. byte, shortint, int, integer,
@@ -1698,14 +1698,14 @@ is to silently drop the carry on assignment.
 Example:
 
 ```systemverilog
-logic [3:0] cnt, ncnt;
-assign ncnt = cnt + 4'h1;
+logic [3:0] cnt_d, cnt_q;
+assign cnt_d = cnt_q + 4'h1;
 ```
 
 Or you may explicitly express dropping the carry by using size casting.
 
 ```systemverilog
-assign ncnt = 4'(cnt + 4'h1);
+assign cnt_d = 4'(cnt_q + 4'h1);
 ```
 
 ### Blocking and Non-blocking Assignments
