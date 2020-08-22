@@ -2201,7 +2201,7 @@ such that an `X` in the case expression may match one or more case items.
 performs exact matches for undriven `X` inputs. While this does not completely
 fix the problems with symmetric wildcard matching, it is harder to accidentally
 produce a `Z` input than an `X` input, so this form is preferred.
-`case inside` does not treat either `X` nor `Z` in the case expression as a
+`case inside` does not treat either `X` or `Z` in the case expression as a
 wildcard, so this form is more preferred than `casez`.
 
 References:
