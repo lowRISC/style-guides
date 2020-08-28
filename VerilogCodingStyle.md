@@ -2202,7 +2202,7 @@ performs exact matches for undriven `X` inputs. While this does not completely
 fix the problems with symmetric wildcard matching, it is harder to accidentally
 produce a `Z` input than an `X` input, so this form is preferred.
 `case inside` does not treat either `X` or `Z` in the case expression as a
-wildcard, so this form is more preferred than `casez`.
+wildcard, so this form is preferred over `casez`.
 
 References:
 
