@@ -2188,9 +2188,9 @@ end
 
 #### Wildcards in case items
 
-Use `case` instead of `case inside` nor `casez` whenever wildcard operator
-behavior is not required. When wildcard behavior is needed, use `case inside`
-(or `casez` if only Verilog-2001 is supported).
+Use `case` if wildcard operator behavior is not needed. 
+Use `case inside` if wildcard operator behavior is needed.
+Use `casez` if wildcard operator behavior is needed and Verilog-2001 compatibility is required.
 
 When expressing a wildcard in a case item, use the '?' character since it more
 clearly expresses the intent.
