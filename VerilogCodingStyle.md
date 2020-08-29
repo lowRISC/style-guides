@@ -2573,7 +2573,14 @@ wire [7:0] sum = a + b;  // Continuous assignment
 
 &#x1f44e;
 ```systemverilog {.bad}
-logic [7:0] acc = '0;  // Initialization (not synthesizable)
+logic [7:0] sum = a + b; // Initialization (not synthesizable)
+```
+
+`sum` is initialized to sum of initial values of a and b.
+
+&#x1f44d;
+```systemverilog {.good}
+logic [7:0] acc = '0;    // Initialization (synthesizable on some FPGA tools)
 ```
 
 There are exceptions for places where `logic` is inappropriate. For example,
