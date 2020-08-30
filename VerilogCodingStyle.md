@@ -1900,6 +1900,28 @@ separate combinational (`always_comb`) block. Ideally, sequential blocks should
 contain only a register instantiation, with perhaps a load enable or an
 increment.
 
+***All clock signals should be generated using blocking assignment even
+for clock dividers.***
+
+See #44 for details.
+
+&#x1f44d;
+```systemverilog {.good}
+// only for test bench code
+logic clk;
+initial begin
+  clk <= 1'b0;
+  forever #5 clk = ~clk;              // blocking assignment
+end
+
+// for both synthesizable and test bench code
+logic clk_div2;
+always_ff @(posedge clk or negedge rst_ni) begin
+  if (!rst_ni) clk_div2 = 1'b0;
+  else         clk_div2 = ~clk_div2;  // blocking assignment
+end
+```
+
 ### Don't Cares (`X`'s)
 
 ***The use of `X` literals in RTL code is strongly discouraged. RTL must not
