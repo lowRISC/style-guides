@@ -1075,8 +1075,30 @@ assert(function_that_has_side_effects());
 Always put `wait fork` and `disable fork` constructs inside of an
 `isolation fork...join` block to avoid erroneous waiting.
 It is recommended to use the `DV_SPINWAIT` macro whenever possible,
-[as described here](#macro-usage)
+[as described here](#macro-usage).
 
+When disabling subprocesses, this may be done by using `disable fork` to
+terminate all processes or by `disable thread_label` to disable a specific
+thread. You may not use `disable fork_label` to disable all threads in a fork
+statement because there is inconsistent support for this among EDA tools. The
+use of `disable fork_label` is not compliant to the SystemVerilog-2017
+standard (see Section 9.6.2 and 9.6.3 of the SV2017 LRM). Example code:
+
+```
+fork: fork_label
+  begin: thread_label
+  end
+  ...
+join_any
+
+// INCORRECT.
+disable fork_label;
+// Valid, but does not respect parent child process relationships.
+disable thread_label;
+// Kills all threads spawned by the parent thread, including the ones in the
+// past.
+disable fork;
+```
 
 ### Wait And Non-Forever Loop
 
