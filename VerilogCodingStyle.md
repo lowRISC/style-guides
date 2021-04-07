@@ -335,19 +335,19 @@ keyword on the same line as the case expression.
 &#x1f44d;
 ```systemverilog {.good}
 // Consistent use of begin and end for each case item is good.
-unique case (state)
+unique case (state_q)
   StIdle: begin
-    next_state = StA;
+    state_d = StA;
   end
   StA: begin
-    next_state = StB;
+    state_d = StB;
   end
   StB: begin
-    next_state = StIdle;
+    state_d = StIdle;
     foo = bar;
   end
   default: begin
-    next_state = StIdle;
+    state_d = StIdle;
   end
 endcase
 ```
@@ -355,30 +355,30 @@ endcase
 &#x1f44d;
 ```systemverilog {.good}
 // Case items that fit on a single line may omit begin and end.
-unique case (state)
-  StIdle: next_state = StA;
-  StA: next_state = StB;
+unique case (state_q)
+  StIdle: state_d = StA;
+  StA: state_d = StB;
   StB: begin
-    next_state = StIdle;
+    state_d = StIdle;
     foo = bar;
   end
-  default: next_state = StIdle;
+  default: state_d = StIdle;
 endcase
 ```
 
 &#x1f44e;
 ```systemverilog {.bad}
-unique case (state)
-  StIdle:              // These lines are incorrect because we should not wrap
-    next_state = StA;  // case items at a block boundary without using begin
-  StA:                 // and end.  Case items should fit on a single line, or
-    next_state = StB;  // else the procedural block must have begin and end.
+unique case (state_q)
+  StIdle:           // These lines are incorrect because we should not wrap
+    state_d = StA;  // case items at a block boundary without using begin
+  StA:              // and end.  Case items should fit on a single line, or
+    state_d = StB;  // else the procedural block must have begin and end.
   StB: begin
     foo = bar;
-    next_state = StIdle;
+    state_d = StIdle;
   end
   default: begin
-    next_state = StIdle;
+    state_d = StIdle;
   end
 endcase
 ```
@@ -2176,7 +2176,7 @@ end
 
 #### Wildcards in case items
 
-Use `case` if wildcard operator behavior is not needed. 
+Use `case` if wildcard operator behavior is not needed.
 Use `case inside` if wildcard operator behavior is needed.
 Use `casez` if wildcard operator behavior is needed and Verilog-2001 compatibility is required.
 
