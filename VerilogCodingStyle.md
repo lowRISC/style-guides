@@ -97,9 +97,12 @@ representation of this style guide.
     - [Sequential Logic (Latches)](#sequential-logic-latches)
     - [Sequential Logic (Registers)](#sequential-logic-registers)
     - [Don't Cares (`X`'s)](#dont-cares-xs)
+      - [Catching errors where invalid values are consumed](#catching-errors-where-invalid-values-are-consumed)
+      - [Specific Guidance on Case Statements and Ternaries](#specific-guidance-on-case-statements-and-ternaries)
+      - [Dynamic Array Indexing](#dynamic-array-indexing)
     - [Combinational Logic](#combinational-logic)
     - [Case Statements](#case-statements)
-        - [Wildcards in case items](#wildcards-in-case-items)
+      - [Wildcards in case items](#wildcards-in-case-items)
     - [Generate Constructs](#generate-constructs)
     - [Signed Arithmetic](#signed-arithmetic)
     - [Number Formatting](#number-formatting)
@@ -118,11 +121,13 @@ representation of this style guide.
     - [Differential Pairs](#differential-pairs)
     - [Delays](#delays)
     - [Wildcard import of packages](#wildcard-import-of-packages)
+    - [Assertion Macros](#assertion-macros)
+      - [A Note on Security Critical Applications](#a-note-on-security-critical-applications)
   - [Appendix - Condensed Style Guide](#appendix---condensed-style-guide)
     - [Basic Style Elements](#basic-style-elements)
     - [Construct Naming](#construct-naming)
     - [Suffixes for signals and types](#suffixes-for-signals-and-types)
-    - [Language features](#language-features)
+    - [Language features](#language-features-1)
 
 
 ### Terminology Conventions
