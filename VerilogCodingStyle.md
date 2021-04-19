@@ -84,7 +84,7 @@ representation of this style guide.
     - [Preferred SystemVerilog Constructs](#preferred-systemverilog-constructs)
     - [Package Dependencies](#package-dependencies)
     - [Module Declaration](#module-declaration)
-    - [Parameterized Module Instantiation](#parameterized-module-instantiation)
+    - [Module Instantiation](#module-instantiation)
     - [Constants](#constants-1)
     - [Signal Widths](#signal-widths)
       - [Always be explicit about the widths of number literals.](#always-be-explicit-about-the-widths-of-number-literals)
@@ -1468,32 +1468,7 @@ output logic b;
 ...
 ```
 
-### Parameterized Module Instantiation
-
-***Use named parameters for all instantiations.***
-
-When parameterizing an instance, specify the parameter using the named parameter
-style. An exception is if there is only one parameter that is obvious such as
-register width, then the instantiation can be implicit.
-
-Indentation for module instantiation follows the standard indentation
-rule of two space indentation.
-
-```systemverilog
-my_module #(
-  .Height(5),
-  .Width(10)
-) my_module (
-  ...etc...
-
-my_reg #(16) my_reg0 (.clk_i, .rst_ni, .d_i(data_in), .q_o(data_out));
-
-```
-Do not specify parameters positionally, unless there is only one parameter and
-the intent of that parameter is obvious, such as the width for a register
-instance.
-
-Do not use `defparam`.
+### Module Instantiation
 
 ***Use named ports to fully specify all instantiations.***
 
@@ -1531,6 +1506,31 @@ example: `.unused_input_port(8'd0)`)
 Do not use positional arguments to connect signals to ports.
 
 Instantiate ports in the same order as they are defined in the module.
+
+***Use named parameters for all instantiations.***
+
+When parameterizing an instance, specify the parameter using the named parameter
+style. An exception is if there is only one parameter that is obvious such as
+register width, then the instantiation can be implicit.
+
+Indentation for module instantiation follows the standard indentation
+rule of two space indentation.
+
+```systemverilog
+my_module #(
+  .Height(5),
+  .Width(10)
+) my_module (
+  ...etc...
+
+my_reg #(16) my_reg0 (.clk_i, .rst_ni, .d_i(data_in), .q_o(data_out));
+
+```
+Do not specify parameters positionally, unless there is only one parameter and
+the intent of that parameter is obvious, such as the width for a register
+instance.
+
+Do not use `defparam`.
 
 ***Do not instantiate recursively.***
 
