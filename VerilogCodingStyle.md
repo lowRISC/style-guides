@@ -1919,7 +1919,7 @@ module mymod (
   logic special_action_en;
 
   assign special_action_en =
-    (external_addr_i == SPECIAL_ADDR) & external_wr_en_i;
+      (external_addr_i == SPECIAL_ADDR) & external_wr_en_i;
 
   `ASSERT_KNOWN(special_action_en)
 
