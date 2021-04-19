@@ -459,7 +459,7 @@ assign bus_concatenation = {
 };
 
 inst_type inst_name1 (
-  .clk_i    (clk),
+  .clk_i       (clk),
   .data_valid_i(data_valid),
   .data_value_i(data_value),
   .data_ready_o(data_ready)
@@ -521,21 +521,47 @@ mymodule mymodule(.a(a),.b(b));
 
 #### Tabular Alignment
 
-***Adding whitespace to cause related things to align is encouraged.***
+Tabular alignment groups two or more similar lines so that the identical parts are directly above one another.
+This alignment makes it easy to see which characters are the same and which characters are different between lines.
 
-Where it is reasonable to do so, align a group of two or more similar lines so
-that the identical parts are directly above one another. This alignment makes it
-easy to see which characters are the same and which characters are different
-between lines.
+***The use of tabular alignment is generally encouraged.***
+
+***The use of tabular alignment is required for some constructs as detailed in the corresponding subsection of this guide.***
+
+Constructs which require tabular alignment:
+
+* [Port expressions in module instantiations](#module-instantiation)
+
+Each block of code, separated by an empty line, is treated as separate "table".
 
 Use spaces, not tabs.
 
 For example:
 
+:+1:
 ```systemverilog
 logic [7:0]  my_interface_data;
 logic [15:0] my_interface_address;
 logic        my_interface_enable;
+
+logic       another_signal;
+logic [7:0] something_else;
+```
+
+:+1:
+```systemverilog
+mod u_mod (
+  .clk_i,
+  .rst_ni,
+  .sig_i          (my_signal_in),
+  .sig2_i         (my_signal_out),
+  // comment with no blank line maintains the block
+  .in_same_block_i(my_signal_in),
+  .sig3_i         (something),
+
+  .in_another_block_i(my_signal_in),
+  .sig4_i            (something)
+);
 ```
 
 #### Expressions
@@ -933,8 +959,8 @@ module my_module #(
     .clk_i,
     .rst_ni,
     .req_valid_i,
-    .req_data_i    (req_data_masked),
-    .req_ready_o,
+    .req_data_i (req_data_masked),
+    .req_ready_o(req_ready),
     ...
   );
 
@@ -1507,6 +1533,31 @@ Do not use positional arguments to connect signals to ports.
 
 Instantiate ports in the same order as they are defined in the module.
 
+Align port expressions in [tabular style](#tabular-alignment).
+Do not include whitespace before the opening parenthesis of the longest port name.
+Do not include whitespace after the opening parenthesis, or before the closing parenthesis enclosing the port expression.
+
+:-1:
+```systemverilog
+mod u_mod(
+  .clk_i,
+  .rst_ni,
+
+  // Not allowed: avoid leading/trailing whitespace in expressions.
+  .sig_1_i( sig_1 ),
+  .sig_2_i( sig_2 )
+);
+
+mod u_mod(
+  .clk_i,
+  .rst_ni,
+
+  .short_sig_i                       (sig_1),
+  // Not allowed: avoid whitespace between the longest signal name and the opening parenthesis.
+  .a_very_long_signal_name_indeed_i  (sig_2)
+);
+```
+
 ***Use named parameters for all instantiations.***
 
 When parameterizing an instance, specify the parameter using the named parameter
@@ -1521,10 +1572,15 @@ my_module #(
   .Height(5),
   .Width(10)
 ) my_module (
-  ...etc...
+  // ...
+);
 
-my_reg #(16) my_reg0 (.clk_i, .rst_ni, .d_i(data_in), .q_o(data_out));
-
+my_reg #(16) my_reg0 (
+  .clk_i,
+  .rst_ni,
+  .d_i   (data_in),
+  .q_o   (data_out)
+);
 ```
 Do not specify parameters positionally, unless there is only one parameter and
 the intent of that parameter is obvious, such as the width for a register
