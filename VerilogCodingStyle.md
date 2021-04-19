@@ -178,13 +178,12 @@ justified by a brief comment, as well as a lint waiver pragma where appropriate.
 
 ### Which Verilog to Use
 
-***Prefer SystemVerilog-2012.***
+***Prefer SystemVerilog-2017.***
 
 All RTL and tests should be developed in SystemVerilog, following the
-[SystemVerilog-2012 standard], except for [prohibited
-features](#problematic-language-features-and-constructs).
+[IEEE 1800-2017 (SystemVerilog-2017) standard](https://ieeexplore.ieee.org/document/8299595), except for [prohibited features](#problematic-language-features-and-constructs).
 
-[SystemVerilog-2012 standard]: http://ieeexplore.ieee.org/servlet/opac?punumber=6469138
+The standards document is available free of cost through [IEEE GET](https://ieeexplore.ieee.org/browse/standards/get-program/page/series?id=80) (a registration is required).
 
 ## Verilog/SystemVerilog Conventions
 
@@ -1247,9 +1246,7 @@ example, `foo_1`, `foo_2`, etc.). Many synthesis tools map buses into nets using
 that naming convention, so similarly named nets can lead to confusion when
 examining a synthesized netlist.
 
-Reserved
-[Verilog](http://www.xilinx.com/support/documentation/sw_manuals/xilinx13_1/ite_r_verilog_reserved_words.htm)
-or [SystemVerilog-2012 standard] keywords may never be used as names.
+Reserved [Verilog](http://www.xilinx.com/support/documentation/sw_manuals/xilinx13_1/ite_r_verilog_reserved_words.htm) or SystemVerilog keywords may never be used as names.
 
 When interoperating with different languages, be mindful not to use keywords
 from other languages.
