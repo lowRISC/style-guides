@@ -1921,7 +1921,7 @@ module mymod (
   assign special_action_en =
     (external_addr_i == SPECIAL_ADDR) & external_wr_en_i;
 
-  `ASSERT_KNOWN(special_action_en);
+  `ASSERT_KNOWN(special_action_en)
 
 endmodule
 ```
