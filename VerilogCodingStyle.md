@@ -766,6 +766,20 @@ always_ff @(posedge clk) begin
 end
 ```
 
+However, keywords that behave more like a function or a task are better aligned
+with the [Function And Task Calls](#function-and-task-calls) rule. An example
+of this is the `wait` statement used in verification:
+
+&#x1f44d;
+```systemverilog {.good}
+  wait(reset_asserted);
+```
+
+&#x1f44e;
+```systemverilog {.bad}
+  wait (reset_asserted);   // There must not be a space before "("
+```
+
 ### Parentheses
 
 ***Use parentheses to make operations unambiguous.***
