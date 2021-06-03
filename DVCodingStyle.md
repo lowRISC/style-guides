@@ -1074,7 +1074,10 @@ assert(function_that_has_side_effects());
 Always put `wait fork` and `disable fork` constructs inside of an
 `isolation fork...join` block to avoid erroneous waiting.
 It is recommended to use the `DV_SPINWAIT` macro whenever possible,
-[as described here](#macro-usage)
+[as described here](#macro-usage).
+
+Only `disable fork` may be used to terminate all subprocesses of the calling processes;
+the use of `disable fork_process_label` is not compliant to the SystemVerilog-2017 standard (see Section 9.6.2 and 9.6.3 of the SV2017 LRM).
 
 
 ### Void Casts
