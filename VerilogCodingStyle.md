@@ -106,6 +106,7 @@ representation of this style guide.
     - [Functions and Tasks](#functions-and-tasks)
     - [Problematic Language Features and Constructs](#problematic-language-features-and-constructs)
       - [Floating begin-end blocks](#floating-begin-end-blocks)
+      - [Hierarchical references](#hierarchical-references)
   - [Design Conventions](#design-conventions)
     - [Summary](#summary-3)
     - [Declare all signals](#declare-all-signals)
@@ -2466,6 +2467,50 @@ module foo (
   begin // illegal generate block
     assign foo = bar;
   end
+endmodule
+```
+
+#### Hierarchical references
+
+The use of hierarchical references in synthesizable RTL code is prohibited.
+Certain synthesis tools indeed support hierarchical references, while some
+tools error out and others may silently ignore them potentially leading to
+simulation/synthesis mismatches.
+
+An exemption to this is the case where the hierarchical references are guarded
+by macros to remove them for synthesis, e.g., as part of SystemVerilog
+assertions (SVAs).
+
+&#x1f44e;
+```systemverilog {.bad}
+
+module mymod_int (
+  input        in0_i,
+  input        in1_i,
+  input        in2_i,
+  output logic out_o
+);
+
+  logic int;
+  assign int   = in0_i & in1_i;
+  assign out_o = in2_i | int;
+
+endmodule
+
+module mymod (
+  ...
+);
+
+  mymod_int u_mymod_int (
+    .in0_i,
+    .in1_i,
+    .in2_i,
+    .out_o
+  );
+
+  // Hierarchical references are prohibited in synthesizable RTL code.
+  assign int_o = u_mymod_int.int;
+
 endmodule
 ```
 
