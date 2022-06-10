@@ -44,6 +44,7 @@ following the [UVM methodology](https://www.accellera.org/images//downloads/stan
   * [Bind Statements](#bind-statements)
   * [Simulator Specific Code](#simulator-specific-code)
   * [Forbidden System Tasks and Functions](#forbidden-system-tasks-and-functions)
+  * [Backdoor Force and Probe in Chip-level](#Backdoor Force and Probe in Chip-level)
 
 
 
@@ -1124,3 +1125,18 @@ Do not use the following system functions
 *   `$srandom`, this is not part of the SystemVerilog standard.
     Use `process::self().srandom()` instead.
 
+### Backdoor Force and Probe in Chip-level
+
+Chip-level tests could be run in both RTL and gate sim. Since some signals may not
+be preserved in the same path after synthesis, we need follow these rules to use
+backdoor force or probe. This assumes gate-level netlist won't be flattened.
+
+* Reference module inputs/outputs rather than the internal nets, as input/output ports will be
+  preserved in non-flattened netlist.
+* Reference logic if possible. If that is not possible, structs are likely converted to a giant
+  vector. We can cast that vector to the struct and thus still access the individual members.
+* Do not reference internal nets, as those will likely not be preserved. If we really need to do so,
+  they should be placed in an anchored buffer, in order to preserve the path.
+* Do not reference to internal clocks, as they may not be preserved, even if the clocks are in the
+  module inputs/outputs.
+* CSR hierarchies are likely to be preserved, so CSR backdoor access will still work.
