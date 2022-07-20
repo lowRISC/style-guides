@@ -2547,6 +2547,11 @@ unless otherwise noted:
 -   Interfaces.
 -   The `alias` statement.
 
+To make sure that a language feature is widely supported, tools like
+[sv-tests][svt] can be used for a non-exhaustive overview.
+
+[svt]: https://chipsalliance.github.io/sv-tests-results/
+
 #### Floating begin-end blocks
 
 The use of generate blocks other than `for` loop, `if`, or `case` generate
