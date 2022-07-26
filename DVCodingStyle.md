@@ -39,6 +39,7 @@ following the [UVM methodology](https://www.accellera.org/images//downloads/stan
   * [Loop Operators](#loop-operators)
   * [Code Within Asserts](#code-within-asserts)
   * [Wait and Fork](#wait-and-fork)
+  * [Wait And Non-Forever Loop](#wait-and-non-forever-loop)
   * [Void Casts](#void-casts)
   * [Associative Arrays](#associative-arrays)
   * [Bind Statements](#bind-statements)
@@ -1078,6 +1079,22 @@ It is recommended to use the `DV_SPINWAIT` macro whenever possible,
 [as described here](#macro-usage)
 
 
+### Wait And Non-Forever Loop
+
+Always create a watchdog timer along with the wait statement or the non-forever
+loop. Recommend to use the following macros.
+
+```systemverilog
+// This does `wait (condition);` with a default watchdog timer.
+`DV_WAIT(condition)
+```
+
+```systemverilog
+`DV_SPINWAIT(while (condition) begin
+               ...
+             end)
+```
+
 ### Void Casts
 
 Do not void cast any function/task calls that have useful return values,
@@ -1137,6 +1154,6 @@ backdoor force or probe. This assumes gate-level netlist won't be flattened.
   vector. We can cast that vector to the struct and thus still access the individual members.
 * Do not reference internal nets, as those will likely not be preserved. If we really need to do so,
   they should be placed in an anchored buffer, in order to preserve the path.
-* Do not reference to internal clocks, as they may not be preserved, even if the clocks are in the
-  module inputs/outputs.
+* Do not reference to internal clocks/resets, as they may not be preserved, even if the
+  clocks/resets are in the module inputs/outputs. If we have to, place it in an anchored buffer.
 * CSR hierarchies are likely to be preserved, so CSR backdoor access will still work.
