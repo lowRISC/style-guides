@@ -46,8 +46,7 @@ following the [UVM methodology](https://www.accellera.org/images//downloads/stan
   * [Simulator Specific Code](#simulator-specific-code)
   * [Forbidden System Tasks and Functions](#forbidden-system-tasks-and-functions)
   * [Backdoor Force and Probe in Chip-level](#Backdoor Force and Probe in Chip-level)
-
-
+* [SystemVerilog Assertions](#systemverilog-assertions)
 
 ## Introduction
 
@@ -1142,6 +1141,7 @@ Do not use the following system functions
 *   `$srandom`, this is not part of the SystemVerilog standard.
     Use `process::self().srandom()` instead.
 
+
 ### Backdoor Force and Probe in Chip-level
 
 Chip-level tests could be run in both RTL and gate sim. Since some signals may not
@@ -1157,3 +1157,167 @@ backdoor force or probe. This assumes gate-level netlist won't be flattened.
 * Do not reference to internal clocks/resets, as they may not be preserved, even if the
   clocks/resets are in the module inputs/outputs. If we have to, place it in an anchored buffer.
 * CSR hierarchies are likely to be preserved, so CSR backdoor access will still work.
+
+
+## SystemVerilog Assertions
+
+Most, if not all design properties are captured as in-line assertions within
+the RTL itself. The guidance on usage and implementation of assertions can be
+found in the adjoining [lowRISC Verilog style guide](https://github.com/lowRISC/style-guides/blob/master/VerilogCodingStyle.md#assertion-macros).
+
+In some cases, it may be useful to capture specific design behaviors and their
+expected outcomes as assertion checks, rather than checks in the scoreboard, or
+other UVM testbench components. Such properties may reference internal RTL
+signals at the same or different hierarchies. They may be too complex to embed
+within the RTL itself. So, they may instead be captured in a separate
+SystemVerilog assertion (SVA) module.
+
+The following guidelines help maximize the reuse of these SVA modules
+horizontally (an IP design is enhanced externally, and thus, has an extended
+testbench that reuses heavily from the original testbench) and vertically (an
+IP instantiated in a larger design, such as an SoC).
+
+1.  The SVA module ports must all be inputs only. Since they are passive
+    checkers, they must not drive or force internal signals. Doing so may lead
+    to confusion and increase the debug overhead.
+
+1.  Use the [assertion macros](https://github.com/lowRISC/opentitan/blob/master/hw/ip/prim/rtl/prim_assert.sv).
+
+    :-1:
+    ```systemverilog
+     // Manually typing the complete assertion statement is tedious and error-
+     // prone.
+     OneHotCheck_A: assert property((@posedge clk) disable iff (!rst_n)
+                                    valid |=> $onehot(data));
+       else $error(...);
+    ```
+
+    :+1:
+    ```systemverilog
+    // Assertion macros are concise and hide some extra functionalities
+    // underneath.
+    `ASSERT(OneHotCheck_A, valid |=> $onehot(data))
+    ```
+
+1.  Do not instantiate the SVA module in the testbench. Instead, `bind` it to
+    the RTL module within which it references the signals. When the SVA module
+    is bound to the RTL module, an instance of the SVA module is created
+    underneath all instances of the RTL module.
+
+    :-1:
+    ```systemverilog
+    // Instantiating the SVA module in the testbench forces the user to use
+    // absolute hierarchical paths to signals within the assertion properties
+    // in the SVA module. This hampers reuse, since those paths may not exist
+    // in other testbenches.
+    sva_module_for_aes_core u_sva_module_for_aes_core(.clk(...), ...);
+    ```
+
+    :+1:
+    ```systemverilog
+    // Bind the SVA module to the RTL module directly. All instances of
+    // `aes_core` in the design will benefit from the SVA checks. The SVA
+    // module can also be reused in other testbenches, which may contain
+    // additional instances of this RTL module elsewhere in the design.
+    bind aes_core sva_module_for_aes_core
+        u_sva_module_for_aes_core(.clk(...), ...);
+    ```
+
+1.  Do not use absolute hierarchical paths to signals in the SVA modules (the
+    previous bullet explains why). The bind enables cross module references to
+    signals in the RTL module and its sub-hierarchies using partial paths in
+    the SVA module.
+
+    :-1:
+    ```systemverilog
+      // Path tb.dut.u_aes.u_aes_core.u_foo does not exist in other
+      // testbenches. This module is not reusable in other testbenches.
+      `ASSERT(CheckProp_A, valid |=> $onehot(tb.dut.u_aes.u_aes_core.u_bar.u_baz.u_quux.data_q))
+      `ASSERT(CheckProp_A,
+          tb.dut.u_aes.u_aes_core.u_foo.state_q == Idle |=> `AES_CORE_BAR_HIER.u_baz.u_quux.data_q == 0)
+    ```
+
+    :+1:
+    ```systemverilog
+      // Binding the SVA module to `aes_core` obviates the need to specify the
+      // absolute hierarchical paths to internal signals. Cross module
+      // reference with partial paths is sufficient. This SVA module can now be
+      // reused in the other testbenches.
+      `ASSERT(CheckProp_A, valid |=> $onehot(u_bar.u_baz.u_quux.data_q))
+      `ASSERT(CheckOtherProp_A,
+          u_foo.state_q == Idle |=> u_bar.u_baz.u_quux.data_q == 0)
+    ```
+
+1.  If the assertions reference signals at different sub-hierarchies, then bind
+    the SVA module to the closest common ancestor RTL module. In previous
+    examples, that would be the `aes_core` module.
+
+1.  Consolidate all SVA binds in a dedicated bindfile. The `bind` invocations
+    are placed in a dedicated SystemVerilog module, called the 'bindfile'.
+    Bindfiles are treated as entities that are separate from the testbench
+    module. They are passed to the simulator as one of the 'top level' modules
+    for elaboration. The bindfiles themselves, can be reused in other
+    testbenches, by simply passing them as a 'top level' entity to the
+    simulator in those other testbenches as well.
+
+    :-1:
+    ```systemverilog
+    // The testbench module which instantiates the design under test (DUT).
+    module tb;
+
+      // This module is considered 'unreusable'. The `bind` invocations below
+      // must hence be replicated in other testbenches where the SVA module can
+      // be reused.
+      bind aes_core sva_module_for_aes_core
+          u_sva_module_for_aes_core(.clk(...), ...);
+
+    endmodule
+    ```
+
+    :+1:
+    ```systemverilog
+    // A dedicated bindfile for all AES assertions.
+    module aes_sva_bind;
+
+      // This module is reusable in other testbenches. The `bind` invocations
+      // need not be replicated in other testbenches.
+      bind aes_core sva_module_for_aes_core
+          u_sva_module_for_aes_core(.clk(...), ...);
+
+    endmodule
+    ```
+
+1.  Bind SVA modules to RTL modules and not to specific instances of the RTL
+    module. Binding the SVA module to an instance again, creates reusability
+    issues - other testbenches may have additional instances of the RTL module
+    elsewhere in the design, which will miss out on the SVA checks. If there is
+    a strong justifiable reason to bind the SVA module to a specifc instance,
+    then refrain from specifying the absolute hierarchical path to the
+    instance. Instead, use the `bind <module_name>: <instance_name>` notation.
+
+    :-1:
+    ```systemverilog
+      // This bindfile is not reusable in other testbenches, because the `bind`
+      // is applied to an instance with absolute hierarchical path, which may
+      // not exist in other testbenches.
+      bind tb.dut.u_aes.u_aes_core sva_module_for_aes_core
+          u_sva_module_for_aes_core(.clk(...), ...);
+    ```
+
+    :-1:
+    ```systemverilog
+      // SVA module is only bound to `u_aes_core` instance of `aes_core`. This
+      // bindfile is reusable in other testbenches. But note that only the
+      // `aes_core` instance named `u_aes_core` will receive the SVA checks.
+      // Discouraged, but fine reusablility-wise.
+      bind aes_core: u_aes_core sva_module_for_aes_core
+          u_sva_module_for_aes_core(.clk(...), ...);
+    ```
+
+    :+1:
+    ```systemverilog
+      // This bindfile is reusable in other testbenches.
+      bind aes_core sva_module_for_aes_core
+          u_sva_module_for_aes_core(.clk(...), ...);
+    ```
+
