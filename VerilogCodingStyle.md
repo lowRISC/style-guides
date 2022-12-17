@@ -1649,7 +1649,7 @@ Exceptions:
 
 *   When using parameterized widths, it is acceptable to simply use `1'b1` (e.g.
     when incrementing) rather than contrivances such as
-    `{{(Bus_width-1){1'b0}}, 1'b1}`. Alternately it could be written as `Bus_width'(1)`.
+    `{{(BusWidth-1){1'b0}}, 1'b1}`. Alternately it could be written as `BusWidth'(1)`.
 *   It is acceptable to use the '0 construct to create an automatic correctly
     sized zero.
 *   Literals assigned to integer variants (e.g. byte, shortint, int, integer,
@@ -2862,11 +2862,12 @@ always_comb begin
   bum = 1'b0;
   unique case (alcor_state_q)
     // StIdle: waiting for frame_start
-    StIdle:
+    StIdle: begin
       if (frame_start) begin
         foo = 1'b1;
         alcor_state_d = StFrameStart;
       end
+    end
     // StFrameStart: Reset accumulators
     StFrameStart: begin
       // ... etc ...
