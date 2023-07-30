@@ -2539,6 +2539,52 @@ function automatic logic [2:0] foo(logic [2:0] a, logic [2:0] b);
 endfunction
 ```
 
+Functions should not reference any non-local signals or variables outside their
+scope. Avoiding non-local references improves readability and helps reduce
+simulation/synthesis mismatches. Accessing non-local parameters and constants
+is allowed.
+
+&#x1f44e;
+```systemverilog {.bad}
+// - Incorrect because `mem` is not local to get_mem()
+// - Incorrect because `in_i` is not local to get_mem()
+module mymod (
+  input   logic [7:0] in_i,
+  output  logic [7:0] out_o
+);
+
+logic [7:0] mem[256];
+
+function automatic logic [7:0] get_mem();
+  return mem[in_i];
+endfunction
+
+assign out_o = get_mem();
+
+endmodule
+```
+
+&#x1f44d;
+```systemverilog {.good}
+// - Correct because `MagicValue` is a parameter
+// - Correct because `my_pkg::OtherMagicValue` is a parameter
+// - Correct because `in_i` passed as an argument
+module mymod (
+  input   logic [7:0] in_i,
+  output  logic [7:0] out_o
+);
+
+localparam [7:0] MagicValue = 1;
+
+function automatic logic is_magic(logic [7:0] v);
+  return (v == MagicValue) || (v == my_pkg::OtherMagicValue);
+endfunction
+
+assign out_o = is_magic(in_i);
+
+endmodule
+```
+
 ### Problematic Language Features and Constructs
 
 These language features are considered problematic and their use is discouraged
