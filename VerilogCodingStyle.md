@@ -1932,9 +1932,9 @@ by Don Mills.
 
 Note that although don't cares can be used to indicate possible optimization
 opportunities to the synthesis tool, it is debatable whether the gains in logic
-reduction are significant enough to outweigh the possible synthesis mismatch
-issues that the use of `X` literals may entail (especially with the gate-counts
-available in today's technologies).
+reduction are significant enough to outweigh the possible simulation/synthesis
+mismatch issues that the use of `X` literals may entail (especially with the
+gate-counts available in today's technologies).
 
 
 #### Catching errors where invalid values are consumed
@@ -2152,8 +2152,8 @@ Synthesizable combinational logic blocks should only use blocking assignments.
 Do not use three-state logic (`Z` state) to accomplish on-chip logic such as
 muxing.
 
-Do not infer a latch inside a function, as this may cause a simulation /
-synthesis mismatch.
+Do not infer a latch inside a function, as this may cause a
+simulation/synthesis mismatch.
 
 ### Case Statements
 
@@ -2161,7 +2161,7 @@ synthesis mismatch.
 practice. Always define a default case.***
 
 Never use either the `full_case` or `parallel_case` pragmas. These pragmas can
-easily cause synthesis-simulation mismatches.
+easily cause simulation/synthesis mismatches.
 
 Here is an example of a style-compliant full case statement:
 
@@ -2194,7 +2194,7 @@ Be sure to use `unique case` correctly. In particular, make sure that:
   - if no default assignments are given before the case statement as shown in
   the example above, any variables assigned in one case item must be assigned in
   all case items, including the `default:`. Failing to do this can lead to a
-  simulation-synthesis mismatch as described in [Don Mills' paper][yalagp].
+  simulation/synthesis mismatch as described in [Don Mills' paper][yalagp].
 
 The following is a different example showing a style-compliant case statement
 variant that is frequently used for describing the next-state logic of a finite
@@ -2203,7 +2203,7 @@ assignments are put before the `unique case` block, thus making it possible to
 omit common assignments in the individual cases further below. If it weren't for
 the common default assignments before the case statement, all variables would
 have to be assigned a value in all cases and in the `default:` in order to
-prevent simulation-synthesis mismatches.
+prevent simulation/synthesis mismatches.
 
 ```systemverilog
 always_comb begin
