@@ -1187,7 +1187,7 @@ module simple (
   logic valid_d, valid_q, valid_q2, valid_q3;
   assign valid_d = valid_i; // next state assignment
 
-  always_ff @(posedge clk or negedge rst_ni) begin
+  always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
       valid_q  <= '0;
       valid_q2 <= '0;
