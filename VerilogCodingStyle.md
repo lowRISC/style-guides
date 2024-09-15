@@ -1900,10 +1900,15 @@ separate combinational (`always_comb`) block. Ideally, sequential blocks should
 contain only a register instantiation, with perhaps a load enable or an
 increment.
 
+Exception: Even in a sequential always block, use blocking assignments (`=`) for
+clock dividers.  See [Clock Generation](#clock-generation).
+
+### Clock Generation
+
 ***All clock signals should be generated using blocking assignment even
 for clock dividers.***
 
-See #44 for details.
+See #44 for more details.
 
 &#x1f44d;
 ```systemverilog {.good}
