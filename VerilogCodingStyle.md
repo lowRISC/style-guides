@@ -1,10 +1,12 @@
-# lowRISC Verilog Coding Style Guide
+# xlsynth Verilog Coding Style Guide
+
+Originally forked from https://github.com/lowrisc/style-guides with our own changes applied on top.
+We will attempt to keep the style guide as close to lowRISC as possible, and may consider offering changes to upstream.
+Refer to the CHANGELOG and PR history to inspect where we have diverged from lowRISC.
 
 ## Basics
 
 ### Summary
-
-Verilog is the main logic design language for lowRISC Comportable IP.
 
 Verilog and SystemVerilog (often generically referred to as just "Verilog" in
 this document) can be written in vastly different styles, which can lead to code
@@ -29,7 +31,7 @@ representation of this style guide.
 
 **Table of Contents**
 
-- [lowRISC Verilog Coding Style Guide](#lowrisc-verilog-coding-style-guide)
+- [xlsynth Verilog Coding Style Guide](#xlsynth-verilog-coding-style-guide)
   - [Basics](#basics)
     - [Summary](#summary)
     - [Terminology Conventions](#terminology-conventions)
