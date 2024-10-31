@@ -968,7 +968,7 @@ module my_module #(
     req_data_masked = req_data;
     case (fsm_state_q)
       ST_IDLE: begin
-        req_data_masked = req_data & MASK_IDLE;
+        req_data_masked = req_data & MaskIdle;
         ...
   end
 
@@ -981,18 +981,16 @@ endmodule
 
 ### Summary
 
-| Construct                            | Style                   |
-| ------------------------------------ | ----------------------- |
-| Declarations (module, class, package, interface) | `lower_snake_case` |
-| Instance names                       | `lower_snake_case`      |
-| Signals (nets and ports)             | `lower_snake_case`      |
-| Variables, functions, tasks          | `lower_snake_case`      |
-| Named code blocks                    | `lower_snake_case`      |
-| \`define macros                      | `ALL_CAPS`              |
-| Tunable parameters for parameterized modules, classes, and interfaces | `UpperCamelCase` |
-| Constants                            | `ALL_CAPS` or `UpperCamelCase` |
-| Typedefs (including enums)           | `lower_snake_case_t`    |
-| Enumerated value names               | `UpperCamelCase`        |
+| Construct                                        | Style                   |
+| ------------------------------------             | ----------------------- |
+| Declarations (module, class, package, interface) | `lower_snake_case`      |
+| Instance names                                   | `lower_snake_case`      |
+| Signals (nets and ports)                         | `lower_snake_case`      |
+| Variables, functions, tasks                      | `lower_snake_case`      |
+| Named code blocks                                | `lower_snake_case`      |
+| \`define macros                                  | `ALL_CAPS`              |
+| Constants (parameters, localparams, enum values) | `UpperCamelCase`        |
+| Typedefs (including enums)                       | `lower_snake_case_t`    |
 
 ### Constants
 
@@ -1018,17 +1016,15 @@ Define project-wide constants in the project's main package.
 Other packages may also be declared with their own `parameter` constants to
 facilitate the creation of IP that may be re-used across many projects.
 
-The preferred naming convention for all immutable constants is to use `ALL_CAPS`, but there are times when the use of `UpperCamelCase` might be considered more natural.
+The naming convention for all elaboration-time constants is to use `UpperCamelCase`.
+The `ALL_CAPS` style is reserved for preprocessor definitions.
 
 | Constant Type | Style Preference | Conversation |
 | ---- | ---- | ---- |
-| \`define            | `ALL_CAPS`       | Truly constant |
-| module parameter    | `UpperCamelCase` | truly modifiable by instantiation, not constant |
-| derived localparam  | `UpperCamelCase` | while not modified directly, still tracks module parameter |
-| tuneable localparam | `UpperCamelCase` | while not expected to change upon final RTL version, is used by designer to explore the design space conveniently |
-| true localparam constant | `ALL_CAPS`  | Example `localparam OP_JALR = 8'hA0;` |
-| enum member true constant | `ALL_CAPS` | Example `typedef enum ... { OP_JALR = 8'hA0;` |
-| enum set member | `ALL_CAPS` or `UpperCamelCase`     | Example `typedef enum ... { ST_IDLE, ST_FRAME_START, ST_DYN_INSTR_READ ...`, `typedef enum ... { StIdle, StFrameStart, StDynInstrRead...`. A collection of arbitrary values, could be either convention. |
+| \`define    | `ALL_CAPS`       | Preprocessor-time constant |
+| parameter   | `UpperCamelCase` | Elaboration-time constant |
+| localparam  | `UpperCamelCase` | Elaboration-time constant |
+| enum member | `UpperCamelCase` | Elaboration-time constant |
 
 The units for a constant should be described in the symbol name, unless the
 constant is unitless or the units are "bits." For example, `FooLengthBytes`.
@@ -1040,8 +1036,8 @@ Example:
 // package-scope
 package my_pkg;
 
-  parameter int unsigned NUM_CPU_CORES = 64;
-  // reference elsewhere as my_pkg::NUM_CPU_CORES
+  parameter int unsigned NumCpuCores = 64;
+  // reference elsewhere as my_pkg::NumCpuCores
 
 endpackage
 ```
@@ -1056,9 +1052,8 @@ design re-use.
 
 Use the keyword `parameter` within the `module` declaration of a parameterized
 module to indicate what parameters the user is expected to tune at
-instantiation. The preferred naming convention for all parameters is
-`UpperCamelCase`. Some projects may choose to use `ALL_CAPS` to differentiate
-tuneable parameters from constants.
+instantiation. The naming convention for all parameters is
+`UpperCamelCase`.
 
 Derived parameters within the `module` declaration should use `localparam`.
 An example is shown below.
@@ -1202,8 +1197,7 @@ endmodule // simple
 
 ### Enumerations
 
-***Name enumeration types `snake_case_t`.  Name enumeration values `ALL_CAPS` or
-`UpperCamelCase`.***
+***Name enumeration types `snake_case_t`.  Name enumeration values `UpperCamelCase`.***
 
 Always name `enum` types using `typedef`. The storage type of any enumerated
 type must be specified. For synthesizable enums, the storage type must be a
@@ -1215,31 +1209,19 @@ other places throughout the project and across projects.
 Enumeration type names should contain only lower-case alphanumeric characters
 and underscores. You must suffix enumeration type names with `_t`.
 
-Enumeration value names (constants) should typically be `ALL_CAPS`, for example,
-`READY_TO_SEND`, to reflect their constant nature, especially for truly unchangeable
-values like defined opcode assignments.  There are times when `UpperCamelCase`
-might be preferred, when the enumerated type's assigned value is effectively a
-don't care to the designer, like state machine values.  See the conversation on
-[constants](#constants) for a discussion on how to think of this recommendation.
+Enumeration value names (constants) should always be `UpperCamelCase`, for example,
+`ReadyToSend`, to reflect their constant nature, especially for truly unchangeable
+values like defined opcode assignments. See the conversation on
+[constants](#constants).
 
 &#x1f44d;
 ```systemverilog {.good}
 typedef enum logic [7:0] {  // 8-bit opcodes
-  OP_JALR = 8'hA0,
-  OP_ADDI = 8'h47,
-  OP_LDW  = 8'h0B
+  OpJalr = 8'hA0,
+  OpAddi = 8'h47,
+  OpLdw  = 8'h0B
 } opcode_t;
 opcode_t op_val;
-```
-
-&#x1f44d;
-```systemverilog {.good}
-typedef enum logic [1:0] {  // A 2-bit enumerated type
-  ACC_WRITE,
-  ACC_READ,
-  ACC_PAUSE
-} access_t; // new named type is created
-access_t req_access, resp_access;
 ```
 
 &#x1f44d;
@@ -1610,14 +1592,13 @@ if the constant is describing the default unit type, "bits."
 Example:
 
 ```systemverilog
-localparam int unsigned INTERFACE_WIDTH = 64;  // Bits
-localparam int unsigned INTERFACE_WIDTH_BYTES = (INTERFACE_WIDTH + 7) / 8;
-localparam int unsigned INTERFACE_WIDTH_64B_WORDS = (INTERFACE_WIDTH + 63) / 64;
-localparam int unsigned IMAGE_WIDTH_PIXELS = 640;
-localparam int unsigned MEGA = 1000 * 1000;  // Unitless
-localparam int unsigned MEBI = 1024 * 1024;  // Unitless
-localparam int unsigned SYSTEM_CLOCK_HZ = 200 * MEGA;
-```
+localparam int unsigned InterfaceWidth = 64;  // Bits
+localparam int unsigned InterfaceWidthBytes = (InterfaceWidth + 7) / 8;
+localparam int unsigned InterfaceWidth64bWords = (InterfaceWidth + 63) / 64;
+localparam int unsigned ImageWidthPixels = 640;
+localparam int unsigned Mega = 1000 * 1000;  // Unitless
+localparam int unsigned Mebi = 1024 * 1024;  // Unitless
+localparam int unsigned SystemClockHz = 200 * Mega;
 
 ### Signal Widths
 
@@ -1956,7 +1937,7 @@ assign reg_wr_en = ...
 // trigger some specific action when a certain register is written
 logic special_reg_en;
 
-assign special_reg_en = (reg_addr == SPECIAL_REG_ADDR) & reg_wr_en;
+assign special_reg_en = (reg_addr == SpecialRegAddr) & reg_wr_en;
 
 // Aim to keep RHS of implication as broad as possible
 `ASSERT(NoSpecialRegEnWithoutRegEn, special_reg_en |-> reg_wr_en);
@@ -1974,7 +1955,7 @@ module mymod (
   logic special_action_en;
 
   assign special_action_en =
-      (external_addr == SPECIAL_ADDR) & external_wr_en;
+      (external_addr == SpecialAddr) & external_wr_en;
 
   `ASSERT_KNOWN(special_action_en)
 
@@ -2040,19 +2021,19 @@ In the context of ternary statements, the following are encouraged examples:
 `ASSERT_KNOWN(ModeKnown_A, mode, clk, !rst_n)
 `ASSERT_KNOWN(LenKnown_A, len, clk, !rst_n)
 // assign '0 for all other combinations
-assign val = (mode == ENC)                    ? 8'h01 :
-             (mode == DEC && len == LEN128) ? 8'h36 :
-             (mode == DEC && len == LEN192) ? 8'h80 :
-             (mode == DEC && len == LEN256) ? 8'h40 : 8'h00;
+assign val = (mode == Enc)            ? 8'h01 :
+       (mode == Dec && len == Len128) ? 8'h36 :
+       (mode == Dec && len == Len192) ? 8'h80 :
+       (mode == Dec && len == Len256) ? 8'h40 : 8'h00;
 
 // optional, but more explicit
-`ASSERT(ValSelValid_A, mode == ENC || mode == DEC &&
-    len inside {LEN128, LEN192, LEN256}, clk, !rst_n)
+`ASSERT(ValSelValid_A, mode == Enc || mode == Dec &&
+  len inside {Len128, Len192, Len256}, clk, !rst_n)
 // using one of the valid outputs for other combinations (saves logic)
-assign val = (mode == ENC)                    ? 8'h01 :
-             (mode == DEC && len == LEN128) ? 8'h36 :
-             (mode == DEC && len == LEN192) ? 8'h80 :
-             (mode == DEC && len == LEN256) ? 8'h40 : 8'h01;
+assign val = (mode == Enc)            ? 8'h01 :
+       (mode == Dec && len == Len128) ? 8'h36 :
+       (mode == Dec && len == Len192) ? 8'h80 :
+       (mode == Dec && len == Len256) ? 8'h40 : 8'h01;
 ```
 
 Note that there are cases where the input into a case or ternary could be `X`
@@ -3126,7 +3107,6 @@ body for explanations examples, and exceptions.
   `_p` for active high
 * Typedefs should be suffixed with `_t`
 * Multiple suffixes will not be separated with `_`. `n` should come first
-  `i`, `o`, or `io` last
 
 ### Language features
 
