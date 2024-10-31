@@ -991,8 +991,7 @@ endmodule
 | \`define macros                      | `ALL_CAPS`              |
 | Tunable parameters for parameterized modules, classes, and interfaces | `UpperCamelCase` |
 | Constants                            | `ALL_CAPS` or `UpperCamelCase` |
-| Enumeration types                    | `lower_snake_case_e`    |
-| Other typedef types                  | `lower_snake_case_t`    |
+| Typedefs (including enums)           | `lower_snake_case_t`    |
 | Enumerated value names               | `UpperCamelCase`        |
 
 ### Constants
@@ -1142,13 +1141,12 @@ Example:
 
 ### Suffixes
 
-Suffixes are used in several places to give guidance to intent. The following
-table lists the suffixes that have special meaning.
+Suffixes are used in several places to give guidance to intent, while avoiding [Hungarian notation](https://en.wikipedia.org/wiki/Hungarian_notation).
+The following table lists the suffixes that have special meaning.
 
 | Suffix(es)        | Arena | Intent |
 | ---               | :---: | ---    |
-| `_e`              | typedef     | Enumerated types |
-| `_t`              | typedef     | Other typedefs, including signal clusters |
+| `_t`              | typedef     | All typedefs, including signal clusters and enums |
 | `_n`              | signal name | Active low signal |
 | `_n`, `_p`        | signal name | Differential pair, active low and active high |
 | `_d`, `_q`        | signal name | Input and output of register |
@@ -1206,7 +1204,7 @@ endmodule // simple
 
 ### Enumerations
 
-***Name enumeration types `snake_case_e`.  Name enumeration values `ALL_CAPS` or
+***Name enumeration types `snake_case_t`.  Name enumeration values `ALL_CAPS` or
 `UpperCamelCase`.***
 
 Always name `enum` types using `typedef`. The storage type of any enumerated
@@ -1217,7 +1215,7 @@ Anonymous `enum` types are not allowed as they make it harder to use the type in
 other places throughout the project and across projects.
 
 Enumeration type names should contain only lower-case alphanumeric characters
-and underscores. You must suffix enumeration type names with `_e`.
+and underscores. You must suffix enumeration type names with `_t`.
 
 Enumeration value names (constants) should typically be `ALL_CAPS`, for example,
 `READY_TO_SEND`, to reflect their constant nature, especially for truly unchangeable
@@ -1232,8 +1230,8 @@ typedef enum logic [7:0] {  // 8-bit opcodes
   OP_JALR = 8'hA0,
   OP_ADDI = 8'h47,
   OP_LDW  = 8'h0B
-} opcode_e;
-opcode_e op_val;
+} opcode_t;
+opcode_t op_val;
 ```
 
 &#x1f44d;
@@ -1242,8 +1240,8 @@ typedef enum logic [1:0] {  // A 2-bit enumerated type
   ACC_WRITE,
   ACC_READ,
   ACC_PAUSE
-} access_e; // new named type is created
-access_e req_access, resp_access;
+} access_t; // new named type is created
+access_t req_access, resp_access;
 ```
 
 &#x1f44d;
@@ -1252,8 +1250,8 @@ typedef enum logic [1:0] {  // A 2-bit enumerated type
   AccWrite,
   AccRead,
   AccPause
-} access_e; // new named type is created
-access_e req_access, resp_access;
+} access_t; // new named type is created
+access_t req_access, resp_access;
 ```
 
 &#x1f44e;
@@ -2008,8 +2006,8 @@ designer's discretion, and can range from simple `` `ASSERT_KNOWN``  to fully
 functional assertions, as shown in the following examples:
 
 ```systemverilog
-typedef enum logic [1:0] {mode0, mode1, mode2} state_e;
-state_e sel;
+typedef enum logic [1:0] {mode0, mode1, mode2} state_t;
+state_t sel;
 
 // encouraged
 `ASSERT_KNOWN(SelKnown_A, sel)
@@ -2896,9 +2894,9 @@ name, to make them more readable when viewing waveform traces.
 // Define the states
 typedef enum {
   StIdle, StFrameStart, StDynInstrRead, StBandCorr, StAccStoreWrite, StBandEnd
-} alcor_state_e;
+} alcor_state_t;
 
-alcor_state_e alcor_state_d, alcor_state_q;
+alcor_state_t alcor_state_d, alcor_state_q;
 
 // Combinational decode of the state
 always_comb begin
@@ -3130,7 +3128,7 @@ body for explanations examples, and exceptions.
   reflect their latency
 * Active low signals should use `_n`. When using differential signals use
   `_p` for active high
-* Enumerated types should be suffixed with `_e`
+* Typedefs should be suffixed with `_t`
 * Multiple suffixes will not be separated with `_`. `n` should come first
   `i`, `o`, or `io` last
 
