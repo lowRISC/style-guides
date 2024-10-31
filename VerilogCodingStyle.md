@@ -459,10 +459,10 @@ assign bus_concatenation = {
 };
 
 inst_type inst_name1 (
-  .clk_i       (clk),
-  .data_valid_i(data_valid),
-  .data_value_i(data_value),
-  .data_ready_o(data_ready)
+  .clk       (clk),
+  .data_valid(data_valid),
+  .data_value(data_value),
+  .data_ready(data_ready)
 );
 ```
 
@@ -551,16 +551,16 @@ logic [7:0] something_else;
 :+1:
 ```systemverilog
 mod u_mod (
-  .clk_i,
-  .rst_ni,
-  .sig_i          (my_signal_in),
-  .sig2_i         (my_signal_out),
+  .clk,
+  .rst_n,
+  .sig          (my_signal_in),
+  .sig2         (my_signal_out),
   // comment with no blank line maintains the block
-  .in_same_block_i(my_signal_in),
-  .sig3_i         (something),
+  .in_same_block(my_signal_in),
+  .sig3         (something),
 
-  .in_another_block_i(my_signal_in),
-  .sig4_i            (something)
+  .in_another_block(my_signal_in),
+  .sig4            (something)
 );
 ```
 
@@ -945,30 +945,30 @@ module my_module #(
   parameter Width = 80,
   parameter Height = 24
 ) (
-  input              clk_i,
-  input              rst_ni,
-  input              req_valid_i,
-  input  [Width-1:0] req_data_i,
-  output             req_ready_o,
+  input              clk,
+  input              rst_n,
+  input              req_valid,
+  input  [Width-1:0] req_data,
+  output             req_ready,
   ...
 );
 
   logic [Width-1:0] req_data_masked;
 
   submodule u_submodule (
-    .clk_i,
-    .rst_ni,
-    .req_valid_i,
-    .req_data_i (req_data_masked),
-    .req_ready_o(req_ready),
+    .clk,
+    .rst_n,
+    .req_valid,
+    .req_data (req_data_masked),
+    .req_ready(req_ready),
     ...
   );
 
   always_comb begin
-    req_data_masked = req_data_i;
+    req_data_masked = req_data;
     case (fsm_state_q)
       ST_IDLE: begin
-        req_data_masked = req_data_i & MASK_IDLE;
+        req_data_masked = req_data & MASK_IDLE;
         ...
   end
 
@@ -1151,14 +1151,12 @@ The following table lists the suffixes that have special meaning.
 | `_n`, `_p`        | signal name | Differential pair, active low and active high |
 | `_d`, `_q`        | signal name | Input and output of register |
 | `_q2`,`_q3`, etc  | signal name | Pipelined versions of signals; `_q` is one cycle of latency, `_q2` is two cycles, `_q3` is three, etc |
-| `_i`, `_o`, `_io` | signal name | Module inputs, outputs, and bidirectionals |
 
 When multiple suffixes are necessary use the following guidelines:
 
 * Guidance suffixes are added together and not separated by additional `_`
-  characters (`_ni` not `_n_i`)
+  characters (`_nd` not `_n_d`)
 * If the signal is active low `_n` will be the first suffix
-* If the signal is a module input/output the letters will come last.
 * It is not mandatory to propagate `_d` and `_q` to module boundaries.
 
 Example:
@@ -1166,27 +1164,27 @@ Example:
 &#x1f44d;
 ```systemverilog {.good}
 module simple (
-  input        clk_i,
-  input        rst_ni,              // Active low reset
+  input        clk,
+  input        rst_n,              // Active low reset
 
   // writer interface
-  input [15:0] data_i,
-  input        valid_i,
-  output       ready_o,
+  input [15:0] data,
+  input        valid,
+  output       ready,
 
   // bi-directional bus
-  inout [7:0]  driver_io,         // Bi directional signal
+  inout [7:0]  driver,            // Bi directional signal
 
   // Differential pair output
-  output       lvds_po,           // Positive part of the differential signal
-  output       lvds_no            // Negative part of the differential signal
+  output       lvds_p,           // Positive part of the differential signal
+  output       lvds_n            // Negative part of the differential signal
 );
 
   logic valid_d, valid_q, valid_q2, valid_q3;
-  assign valid_d = valid_i; // next state assignment
+  assign valid_d = valid; // next state assignment
 
-  always_ff @(posedge clk_i or negedge rst_ni) begin
-    if (!rst_ni) begin
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
       valid_q  <= '0;
       valid_q2 <= '0;
       valid_q3 <= '0;
@@ -1197,7 +1195,7 @@ module simple (
     end
   end
 
-  assign ready_o = valid_q3; // three clock cycles delay
+  assign ready = valid_q3; // three clock cycles delay
 
 endmodule // simple
 ```
@@ -1309,25 +1307,25 @@ Code example:
 &#x1f44d;
 ```systemverilog {.good}
 module fifo_controller (
-  input         clk_i,
-  input         rst_ni,
+  input         clk,
+  input         rst_n,
 
   // writer interface
-  input [15:0]  wr_data_i,
-  input         wr_valid_i,
-  output        wr_ready_o,
+  input [15:0]  wr_data,
+  input         wr_valid,
+  output        wr_ready,
 
   // reader interface
-  output [15:0] rd_data_o,
-  output        rd_valid_o,
-  output [7:0]  rd_fullness_o,
-  input         rd_ack_i,
+  output [15:0] rd_data,
+  output        rd_valid,
+  output [7:0]  rd_fullness,
+  input         rd_ack,
 
   // memory interface:
-  output [7:0]  mem_addr_o,
-  output [15:0] mem_wdata_o,
-  output        mem_we_o,
-  input  [15:0] mem_rdata_i
+  output [7:0]  mem_addr,
+  output [15:0] mem_wdata,
+  output        mem_we,
+  input  [15:0] mem_rdata
 );
 ```
 
@@ -1458,10 +1456,10 @@ Example without parameters:
 &#x1f44d;
 ```systemverilog {.good}
 module foo (
-  input              clk_i,
-  input              rst_ni,
-  input [7:0]        d_i,
-  output logic [7:0] q_o
+  input              clk,
+  input              rst_n,
+  input [7:0]        d,
+  output logic [7:0] q
 );
 ```
 
@@ -1472,10 +1470,10 @@ Example with parameters:
 module foo #(
   parameter int unsigned Width = 8,
 ) (
-  input                    clk_i,
-  input                    rst_ni,
-  input [Width-1:0]        d_i,
-  output logic [Width-1:0] q_o
+  input                    clk,
+  input                    rst_n,
+  input [Width-1:0]        d,
+  output logic [Width-1:0] q
 );
 ```
 
@@ -1499,10 +1497,10 @@ like this:
 
 ```systemverilog
 my_module i_my_instance (
-  .clk_i (clk_i),
-  .rst_ni(rst_ni),
-  .d_i   (from_here),
-  .q_o   (to_there)
+  .clk (clk_),
+  .rst_n(rst_n),
+  .d   (from_here),
+  .q   (to_there)
 );
 ```
 
@@ -1511,10 +1509,10 @@ If the port and the connecting signal have the same name, you can use the
 
 ```systemverilog
 my_module i_my_instance (
-  .clk_i,
-  .rst_ni,
-  .d_i   (from_here),
-  .q_o   (to_there)
+  .clk,
+  .rst_n,
+  .d   (from_here),
+  .q   (to_there)
 );
 ```
 
@@ -1536,21 +1534,21 @@ Do not include whitespace after the opening parenthesis, or before the closing p
 :-1:
 ```systemverilog
 mod u_mod(
-  .clk_i,
-  .rst_ni,
+  .clk,
+  .rst_n,
 
   // Not allowed: avoid leading/trailing whitespace in expressions.
-  .sig_1_i( sig_1 ),
-  .sig_2_i( sig_2 )
+  .sig_1( sig_1 ),
+  .sig_2( sig_2 )
 );
 
 mod u_mod(
-  .clk_i,
-  .rst_ni,
+  .clk,
+  .rst_n,
 
-  .short_sig_i                       (sig_1),
+  .short_sig                       (sig_1),
   // Not allowed: avoid whitespace between the longest signal name and the opening parenthesis.
-  .a_very_long_signal_name_indeed_i  (sig_2)
+  .a_very_long_signal_name_indeed  (sig_2)
 );
 ```
 
@@ -1572,10 +1570,10 @@ my_module #(
 );
 
 my_reg #(16) my_reg0 (
-  .clk_i,
-  .rst_ni,
-  .d_i   (data_in),
-  .q_o   (data_out)
+  .clk,
+  .rst_n,
+  .d(data_in),
+  .q(data_out)
 );
 ```
 Do not specify parameters positionally, unless there is only one parameter and
@@ -1825,8 +1823,8 @@ implemented:
 logic foo_en;
 logic [7:0] foo_q, foo_d;
 
-always_ff @(posedge clk or negedge rst_ni) begin
-  if (!rst_ni) begin
+always_ff @(posedge clk or negedge rst_n) begin
+  if (!rst_n) begin
     foo_q <= 8'hab;
   end else if (foo_en) begin
     foo_q <= foo_d;
@@ -1862,8 +1860,8 @@ explicit blocking assignments.
 Example:
 
 ```systemverilog
-always_ff @(posedge clk or negedge rst_ni) begin
-  if (!rst_ni) begin
+always_ff @(posedge clk or negedge rst_n) begin
+  if (!rst_n) begin
     state_q <= StIdle;
   end else begin
     state_q <= state_d;
@@ -1969,14 +1967,14 @@ will drive `X` on invalid signals an `` `ASSERT_KNOWN `` suffices.
 
 ```systemverilog
 module mymod (
-  input [7:0] external_addr_i,
-  input       external_wr_en_i
+  input [7:0] external_addr,
+  input       external_wr_en
 );
 
   logic special_action_en;
 
   assign special_action_en =
-      (external_addr_i == SPECIAL_ADDR) & external_wr_en_i;
+      (external_addr == SPECIAL_ADDR) & external_wr_en;
 
   `ASSERT_KNOWN(special_action_en)
 
@@ -1991,12 +1989,12 @@ beginning of the simulation, such as FIFO, SRAM or register file outputs.
 
 ```systemverilog
 module mymod (
-  input        ina_i,
-  input        inb_i,
-  output logic out_o
+  input        ina,
+  input        inb,
+  output logic out
 );
-  assign out_o = ina_i ^ inb_i;
-  `ASSERT_KNOWN(OutKnown_A, out_o, clk_i, !rst_ni)
+  assign out = ina ^ inb;
+  `ASSERT_KNOWN(OutKnown_A, out, clk, !rst_n)
 endmodule : mymod
 ```
 
@@ -2023,7 +2021,7 @@ end
 
 // optional, but more explicit
 // not always applicable
-`ASSERT(MainFsmCase_A, sel inside {mode0, mode1, mode2}, clk_i, !rst_ni)
+`ASSERT(MainFsmCase_A, sel inside {mode0, mode1, mode2}, clk, !rst_n)
 always_comb begin
   out0 = '0;
   out1 = '0;
@@ -2039,22 +2037,22 @@ In the context of ternary statements, the following are encouraged examples:
 
 ```systemverilog
 // encouraged
-`ASSERT_KNOWN(ModeKnown_A, mode_i, clk_i, !rst_ni)
-`ASSERT_KNOWN(LenKnown_A, len_i, clk_i, !rst_ni)
+`ASSERT_KNOWN(ModeKnown_A, mode, clk, !rst_n)
+`ASSERT_KNOWN(LenKnown_A, len, clk, !rst_n)
 // assign '0 for all other combinations
-assign val = (mode_i == ENC)                    ? 8'h01 :
-             (mode_i == DEC && len_i == LEN128) ? 8'h36 :
-             (mode_i == DEC && len_i == LEN192) ? 8'h80 :
-             (mode_i == DEC && len_i == LEN256) ? 8'h40 : 8'h00;
+assign val = (mode == ENC)                    ? 8'h01 :
+             (mode == DEC && len == LEN128) ? 8'h36 :
+             (mode == DEC && len == LEN192) ? 8'h80 :
+             (mode == DEC && len == LEN256) ? 8'h40 : 8'h00;
 
 // optional, but more explicit
-`ASSERT(ValSelValid_A, mode_i == ENC || mode_i == DEC &&
-    len_i inside {LEN128, LEN192, LEN256}, clk_i, !rst_ni)
+`ASSERT(ValSelValid_A, mode == ENC || mode == DEC &&
+    len inside {LEN128, LEN192, LEN256}, clk, !rst_n)
 // using one of the valid outputs for other combinations (saves logic)
-assign val = (mode_i == ENC)                    ? 8'h01 :
-             (mode_i == DEC && len_i == LEN128) ? 8'h36 :
-             (mode_i == DEC && len_i == LEN192) ? 8'h80 :
-             (mode_i == DEC && len_i == LEN256) ? 8'h40 : 8'h01;
+assign val = (mode == ENC)                    ? 8'h01 :
+             (mode == DEC && len == LEN128) ? 8'h36 :
+             (mode == DEC && len == LEN192) ? 8'h80 :
+             (mode == DEC && len == LEN256) ? 8'h40 : 8'h01;
 ```
 
 Note that there are cases where the input into a case or ternary could be `X`
@@ -2545,19 +2543,19 @@ is allowed.
 &#x1f44e;
 ```systemverilog {.bad}
 // - Incorrect because `mem` is not local to get_mem()
-// - Incorrect because `in_i` is not local to get_mem()
+// - Incorrect because `in` is not local to get_mem()
 module mymod (
-  input   logic [7:0] in_i,
-  output  logic [7:0] out_o
+  input   logic [7:0] in,
+  output  logic [7:0] out
 );
 
 logic [7:0] mem[256];
 
 function automatic logic [7:0] get_mem();
-  return mem[in_i];
+  return mem[in];
 endfunction
 
-assign out_o = get_mem();
+assign out = get_mem();
 
 endmodule
 ```
@@ -2566,10 +2564,10 @@ endmodule
 ```systemverilog {.good}
 // - Correct because `MagicValue` is a parameter
 // - Correct because `my_pkg::OtherMagicValue` is a parameter
-// - Correct because `in_i` passed as an argument
+// - Correct because `in` passed as an argument
 module mymod (
-  input   logic [7:0] in_i,
-  output  logic [7:0] out_o
+  input   logic [7:0] in,
+  output  logic [7:0] out
 );
 
 localparam [7:0] MagicValue = 1;
@@ -2578,7 +2576,7 @@ function automatic logic is_magic(logic [7:0] v);
   return (v == MagicValue) || (v == my_pkg::OtherMagicValue);
 endfunction
 
-assign out_o = is_magic(in_i);
+assign out = is_magic(in);
 
 endmodule
 ```
@@ -2625,15 +2623,15 @@ assertions (SVAs).
 ```systemverilog {.bad}
 
 module mymod_int (
-  input        in0_i,
-  input        in1_i,
-  input        in2_i,
-  output logic out_o
+  input        in0,
+  input        in1,
+  input        in2,
+  output logic out
 );
 
-  logic int;
-  assign int   = in0_i & in1_i;
-  assign out_o = in2_i | int;
+  logic intr;
+  assign intr  = in0 & in1;
+  assign out = in2 | intr;
 
 endmodule
 
@@ -2642,14 +2640,14 @@ module mymod (
 );
 
   mymod_int u_mymod_int (
-    .in0_i,
-    .in1_i,
-    .in2_i,
-    .out_o
+    .in0,
+    .in1,
+    .in2,
+    .out
   );
 
   // Hierarchical references are prohibited in synthesizable RTL code.
-  assign int_o = u_mymod_int.int;
+  assign intr = u_mymod_int.intr;
 
 endmodule
 ```
@@ -2739,8 +2737,8 @@ context.
 
 :+1:
 ```systemverilog {.good}
-always_ff @(posedge clk_i or negedge rst_ni) begin
-  if (!rst_ni) begin
+always_ff @(posedge clk or negedge rst_n) begin
+  if (!rst_n) begin
     reg_q <= '0;
   end else begin
     reg_q <= reg_d;
@@ -2760,8 +2758,8 @@ assign y = (a & ~b) | c;
 
 :-1:
 ```systemverilog {.bad}
-always_ff @(posedge clk_i or negedge rst_ni) begin
-  if (~rst_ni) begin
+always_ff @(posedge clk or negedge rst_n) begin
+  if (~rst_n) begin
     reg_q <= '0;
   end else begin
     reg_q <= reg_d;
@@ -3120,8 +3118,6 @@ body for explanations examples, and exceptions.
 
 ### Suffixes for signals and types
 
-* Add `_i` to module inputs, `_o` to module outputs or `_io` for
-  bi-directional module signals
 * The input (next state) of a registered signal should have `_d` and
   the output `_q` as suffix
 * Pipelined versions of signals should be named `_q2`, `_q3`, etc. to
