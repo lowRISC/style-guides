@@ -1147,7 +1147,8 @@ table lists the suffixes that have special meaning.
 
 | Suffix(es)        | Arena | Intent |
 | ---               | :---: | ---    |
-| `_t`              | typedef     | All typedefs, including signal clusters and enums |
+| `_e`              | typedef     | Enumerated types |
+| `_t`              | typedef     | Other typedefs, including signal clusters |
 | `_n`              | signal name | Active low signal |
 | `_n`, `_p`        | signal name | Differential pair, active low and active high |
 | `_d`, `_q`        | signal name | Input and output of register |
