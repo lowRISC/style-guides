@@ -1,6 +1,10 @@
-# lowRISC Style Guides
+# xlsynth Verilog Style Guides
 
-This repository contains style guides curated by lowRISC for use in our
+IMPORTANT: Originally forked from https://github.com/lowrisc/style-guides with our own changes applied on top.
+We will attempt to keep the style guide as close to lowRISC as possible, and may consider offering changes to upstream.
+Refer to the CHANGELOG and PR history to inspect where we have diverged from lowRISC.
+
+This repository contains style guides curated by xlsynth for use in our
 code and documentation.
 
 - [SystemVerilog style guide](VerilogCodingStyle.md)
