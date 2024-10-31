@@ -1147,8 +1147,7 @@ table lists the suffixes that have special meaning.
 
 | Suffix(es)        | Arena | Intent |
 | ---               | :---: | ---    |
-| `_e`              | typedef     | Enumerated types |
-| `_t`              | typedef     | Other typedefs, including signal clusters |
+| `_t`              | typedef     | All typedefs, including signal clusters and enums |
 | `_n`              | signal name | Active low signal |
 | `_n`, `_p`        | signal name | Differential pair, active low and active high |
 | `_d`, `_q`        | signal name | Input and output of register |
@@ -1206,7 +1205,7 @@ endmodule // simple
 
 ### Enumerations
 
-***Name enumeration types `snake_case_e`.  Name enumeration values `ALL_CAPS` or
+***Name enumeration types `snake_case_t`.  Name enumeration values `ALL_CAPS` or
 `UpperCamelCase`.***
 
 Always name `enum` types using `typedef`. The storage type of any enumerated
@@ -1217,7 +1216,7 @@ Anonymous `enum` types are not allowed as they make it harder to use the type in
 other places throughout the project and across projects.
 
 Enumeration type names should contain only lower-case alphanumeric characters
-and underscores. You must suffix enumeration type names with `_e`.
+and underscores. You must suffix enumeration type names with `_t`.
 
 Enumeration value names (constants) should typically be `ALL_CAPS`, for example,
 `READY_TO_SEND`, to reflect their constant nature, especially for truly unchangeable
@@ -1232,8 +1231,8 @@ typedef enum logic [7:0] {  // 8-bit opcodes
   OP_JALR = 8'hA0,
   OP_ADDI = 8'h47,
   OP_LDW  = 8'h0B
-} opcode_e;
-opcode_e op_val;
+} opcode_t;
+opcode_t op_val;
 ```
 
 &#x1f44d;
@@ -1242,8 +1241,8 @@ typedef enum logic [1:0] {  // A 2-bit enumerated type
   ACC_WRITE,
   ACC_READ,
   ACC_PAUSE
-} access_e; // new named type is created
-access_e req_access, resp_access;
+} access_t; // new named type is created
+access_t req_access, resp_access;
 ```
 
 &#x1f44d;
@@ -1252,8 +1251,8 @@ typedef enum logic [1:0] {  // A 2-bit enumerated type
   AccWrite,
   AccRead,
   AccPause
-} access_e; // new named type is created
-access_e req_access, resp_access;
+} access_t; // new named type is created
+access_t req_access, resp_access;
 ```
 
 &#x1f44e;
