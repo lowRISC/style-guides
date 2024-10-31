@@ -1,7 +1,7 @@
-# lowRISC SystemVerilog Coding Style Guide for Design Verification
+# xlsynth SystemVerilog Coding Style Guide for Design Verification
 
-This document is a supplemental Style Guide to the [lowRISC Verilog style
-guide](https://github.com/lowRISC/style-guides/blob/master/VerilogCodingStyle.md),
+This document is a supplemental Style Guide to the [xlsynth Verilog style
+guide](https://github.com/xlsynth/verilog-style-guides/blob/master/VerilogCodingStyle.md),
 with emphasis on writing code for Design Verification (DV) in SystemVerilog,
 following the [UVM methodology](https://www.accellera.org/images//downloads/standards/uvm/uvm_users_guide_1.2.pdf).
 
@@ -60,8 +60,8 @@ as such all included code snippets will be fairly concise.
 
 ## Naming and Style
 
-Refer to [lowRISC Verilog naming
-conventions](https://github.com/lowRISC/style-guides/blob/master/VerilogCodingStyle.md#naming)
+Refer to [xlsynth Verilog naming
+conventions](https://github.com/xlsynth/verilog-style-guides/blob/master/VerilogCodingStyle.md#naming)
 for any general naming style guidelines. In general, common UVM testbench
 components must be declared and assigned handles as follows:
 
@@ -1185,7 +1185,7 @@ backdoor force or probe. This assumes gate-level netlist won't be flattened.
 
 Most, if not all design properties are captured as in-line assertions within
 the RTL itself. The guidance on usage and implementation of assertions can be
-found in the adjoining [lowRISC Verilog style guide](https://github.com/lowRISC/style-guides/blob/master/VerilogCodingStyle.md#assertion-macros).
+found in the adjoining [xlsynth Verilog style guide](https://github.com/xlsynth/verilog-style-guides/blob/master/VerilogCodingStyle.md#assertion-macros).
 
 In some cases, it may be useful to capture specific design behaviors and their
 expected outcomes as assertion checks, rather than checks in the scoreboard, or
