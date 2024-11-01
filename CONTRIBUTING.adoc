@@ -1,0 +1,9 @@
+= Contributing
+
+* Any style guide change is done with a PR.
+* One change per PR.
+* All PRs require at least one approval from a maintainer.
+* Debate the merits of the PR using comments on the PR, rather than with offline or private channels.
+* Always update the changelog with a pointer to your PR so we can maintain a clean history at a glance.
+* The upstream lowRISC style guides have not been updated since 2020, but if there are upstream changes, we will take an attitude of accepting them by default and then applying our own changes locally if needed.
+* We may wish to propose upstreaming some changes to lowRISC as a background activity.
