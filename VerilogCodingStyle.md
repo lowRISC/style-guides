@@ -554,7 +554,7 @@ logic [7:0] something_else;
 ```systemverilog
 mod u_mod (
   .clk,
-  .rst_n,
+  .rst,
   .sig          (my_signal_in),
   .sig2         (my_signal_out),
   // comment with no blank line maintains the block
@@ -948,7 +948,7 @@ module my_module #(
   parameter Height = 24
 ) (
   input              clk,
-  input              rst_n,
+  input              rst,
   input              req_valid,
   input  [Width-1:0] req_data,
   output             req_ready,
@@ -959,7 +959,7 @@ module my_module #(
 
   submodule u_submodule (
     .clk,
-    .rst_n,
+    .rst,
     .req_valid,
     .req_data (req_data_masked),
     .req_ready(req_ready),
@@ -1162,7 +1162,7 @@ Example:
 ```systemverilog {.good}
 module simple (
   input        clk,
-  input        rst_n,              // Active low reset
+  input        rst,              // Synchronous active-high reset
 
   // writer interface
   input [15:0] data,
@@ -1170,7 +1170,7 @@ module simple (
   output       ready,
 
   // bi-directional bus
-  inout [7:0]  driver,            // Bi directional signal
+  inout [7:0]  driver,           // Bi directional signal
 
   // Differential pair output
   output       lvds_p,           // Positive part of the differential signal
@@ -1180,8 +1180,8 @@ module simple (
   logic valid_d, valid_q, valid_q2, valid_q3;
   assign valid_d = valid; // next state assignment
 
-  always_ff @(posedge clk or negedge rst_n) begin
-    if (!rst_n) begin
+  always_ff @(posedge clk or negedge rst) begin
+    if (rst) begin
       valid_q  <= '0;
       valid_q2 <= '0;
       valid_q3 <= '0;
@@ -1292,7 +1292,7 @@ Code example:
 ```systemverilog {.good}
 module fifo_controller (
   input         clk,
-  input         rst_n,
+  input         rst,
 
   // writer interface
   input [15:0]  wr_data,
@@ -1351,30 +1351,37 @@ used to identify other signals in that clock domain.
 
 ### Resets
 
-***Resets are active-low and asynchronous. The default name is `rst_n`.***
+***Resets are active-high and synchronous. The default name is `rst`.***
 
-Chip wide all resets are defined as active low and asynchronous. Thus they are
-defined as tied to the asynchronous reset input of the associated standard
+Chip wide all resets are defined as active high and synchronous. Thus they are
+defined as tied to the synchronous reset input of the associated standard
 cell registers.
 
-The default name is `rst_n`. If they must be distinguished by their clock, the
-clock name should be included in the reset name like `rst_domain_n`.
+The default name is `rst`. If they must be distinguished by their clock, the
+clock name should be included in the reset name like `<clock_domain>_rst`.
 
-SystemVerilog allows either of the following syntax styles, but the style
-guide prefers the former.
+Rationale: Synchronous resets can be driven by normal registers (from another reset domain)
+and don't need special treatment in static timing analysis, providing reset architecture flexibility.
+Active-high positive naming is easy to understand and read (no double-negative like `!rst_n`).
 
-```systemverilog
-// preferred
-always_ff @(posedge clk or negedge rst_n) begin
-  if (!rst_n) begin
+&#x1f44d;
+```systemverilog {.good}
+// GOOD: active-high
+// GOOD: synchronous
+always_ff @(posedge clk) begin
+  if (rst) begin
     q <= 1'b0;
   end else begin
     q <= d;
   end
 end
+```
 
-// legal but not preferred
-always_ff @(posedge clk, negedge rst_n) begin
+&#x1f44e;
+```systemverilog {.bad}
+// BAD: active-low
+// BAD: asynchronous
+always_ff @(posedge clk or negedge rst_n) begin
   if (!rst_n) begin
     q <= 1'b0;
   end else begin
@@ -1441,7 +1448,7 @@ Example without parameters:
 ```systemverilog {.good}
 module foo (
   input              clk,
-  input              rst_n,
+  input              rst,
   input [7:0]        d,
   output logic [7:0] q
 );
@@ -1455,7 +1462,7 @@ module foo #(
   parameter int unsigned Width = 8,
 ) (
   input                    clk,
-  input                    rst_n,
+  input                    rst,
   input [Width-1:0]        d,
   output logic [Width-1:0] q
 );
@@ -1481,10 +1488,10 @@ like this:
 
 ```systemverilog
 my_module i_my_instance (
-  .clk (clk_),
-  .rst_n(rst_n),
-  .d   (from_here),
-  .q   (to_there)
+  .clk(clk_),
+  .rst(rst),
+  .d  (from_here),
+  .q  (to_there)
 );
 ```
 
@@ -1494,7 +1501,7 @@ If the port and the connecting signal have the same name, you can use the
 ```systemverilog
 my_module i_my_instance (
   .clk,
-  .rst_n,
+  .rst,
   .d   (from_here),
   .q   (to_there)
 );
@@ -1519,7 +1526,7 @@ Do not include whitespace after the opening parenthesis, or before the closing p
 ```systemverilog
 mod u_mod(
   .clk,
-  .rst_n,
+  .rst,
 
   // Not allowed: avoid leading/trailing whitespace in expressions.
   .sig_1( sig_1 ),
@@ -1528,7 +1535,7 @@ mod u_mod(
 
 mod u_mod(
   .clk,
-  .rst_n,
+  .rst,
 
   .short_sig                       (sig_1),
   // Not allowed: avoid whitespace between the longest signal name and the opening parenthesis.
@@ -1555,7 +1562,7 @@ my_module #(
 
 my_reg #(16) my_reg0 (
   .clk,
-  .rst_n,
+  .rst,
   .d(data_in),
   .q(data_out)
 );
@@ -1806,8 +1813,8 @@ implemented:
 logic foo_en;
 logic [7:0] foo_q, foo_d;
 
-always_ff @(posedge clk or negedge rst_n) begin
-  if (!rst_n) begin
+always_ff @(posedge clk) begin
+  if (rst) begin
     foo_q <= 8'hab;
   end else if (foo_en) begin
     foo_q <= foo_d;
@@ -1843,8 +1850,8 @@ explicit blocking assignments.
 Example:
 
 ```systemverilog
-always_ff @(posedge clk or negedge rst_n) begin
-  if (!rst_n) begin
+always_ff @(posedge clk) begin
+  if (rst) begin
     state_q <= StIdle;
   end else begin
     state_q <= state_d;
@@ -1977,7 +1984,7 @@ module mymod (
   output logic out
 );
   assign out = ina ^ inb;
-  `ASSERT_KNOWN(OutKnown_A, out, clk, !rst_n)
+  `ASSERT_KNOWN(OutKnown_A, out, clk, rst)
 endmodule : mymod
 ```
 
@@ -2004,7 +2011,7 @@ end
 
 // optional, but more explicit
 // not always applicable
-`ASSERT(MainFsmCase_A, sel inside {mode0, mode1, mode2}, clk, !rst_n)
+`ASSERT(MainFsmCase_A, sel inside {mode0, mode1, mode2}, clk, rst)
 always_comb begin
   out0 = '0;
   out1 = '0;
@@ -2020,8 +2027,8 @@ In the context of ternary statements, the following are encouraged examples:
 
 ```systemverilog
 // encouraged
-`ASSERT_KNOWN(ModeKnown_A, mode, clk, !rst_n)
-`ASSERT_KNOWN(LenKnown_A, len, clk, !rst_n)
+`ASSERT_KNOWN(ModeKnown_A, mode, clk, rst)
+`ASSERT_KNOWN(LenKnown_A, len, clk, rst)
 // assign '0 for all other combinations
 assign val = (mode == Enc)            ? 8'h01 :
        (mode == Dec && len == Len128) ? 8'h36 :
@@ -2030,7 +2037,7 @@ assign val = (mode == Enc)            ? 8'h01 :
 
 // optional, but more explicit
 `ASSERT(ValSelValid_A, mode == Enc || mode == Dec &&
-  len inside {Len128, Len192, Len256}, clk, !rst_n)
+  len inside {Len128, Len192, Len256}, clk, rst)
 // using one of the valid outputs for other combinations (saves logic)
 assign val = (mode == Enc)            ? 8'h01 :
        (mode == Dec && len == Len128) ? 8'h36 :
@@ -2720,14 +2727,6 @@ context.
 
 :+1:
 ```systemverilog {.good}
-always_ff @(posedge clk or negedge rst_n) begin
-  if (!rst_n) begin
-    reg_q <= '0;
-  end else begin
-    reg_q <= reg_d;
-  end
-end
-
 always_comb begin
   if (bool_a || (bool_b && !bool_c) begin
     x = 1'b1;
@@ -2741,14 +2740,6 @@ assign y = (a & ~b) | c;
 
 :-1:
 ```systemverilog {.bad}
-always_ff @(posedge clk or negedge rst_n) begin
-  if (~rst_n) begin
-    reg_q <= '0;
-  end else begin
-    reg_q <= reg_d;
-  end
-end
-
 always_comb begin
   if (bool_a | (bool_b & ~bool_c) begin
     x = 1'b1;
@@ -2902,8 +2893,8 @@ always_comb begin
 end
 
 // Register the state
-always_ff @(posedge clk or negedge rst_n) begin
-  if (!rst_n) begin
+always_ff @(posedge clk) begin
+  if (rst) begin
     alcor_state_q <= StIdle;
   end else begin
     alcor_state_q <= alcor_state_d;
@@ -3094,8 +3085,7 @@ body for explanations examples, and exceptions.
 * Use **UpperCamelCase** for tunable parameters, enumerated value names
 * Use **ALL\_CAPS** for constants and define macros
 * Main clock signal is named `clk`. All clock signals must start with `clk_`
-* Reset signals are **active-low** and **asynchronous**, default name is
-  `rst_n`
+* Reset signals are **active-high** and **synchronous**, default name is `rst`
 * Signal names should be descriptive and be consistent throughout the
   hierarchy
 
