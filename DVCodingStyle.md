@@ -46,7 +46,7 @@ following the [UVM methodology](https://www.accellera.org/images//downloads/stan
   * [Simulator Specific Code](#simulator-specific-code)
   * [Forbidden System Tasks and Functions](#forbidden-system-tasks-and-functions)
   * [Backdoor Force and Probe in Chip-level](#Backdoor Force and Probe in Chip-level)
-* [SystemVerilog Assertions](#systemverilog-assertions)
+  * [SystemVerilog Assertions](#systemverilog-assertions)
 
 ## Introduction
 
@@ -1181,7 +1181,7 @@ backdoor force or probe. This assumes gate-level netlist won't be flattened.
 * CSR hierarchies are likely to be preserved, so CSR backdoor access will still work.
 
 
-## SystemVerilog Assertions
+### SystemVerilog Assertions
 
 Most, if not all design properties are captured as in-line assertions within
 the RTL itself. The guidance on usage and implementation of assertions can be
