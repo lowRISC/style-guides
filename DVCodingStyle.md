@@ -46,6 +46,7 @@ following the [UVM methodology](https://www.accellera.org/images//downloads/stan
   * [Simulator Specific Code](#simulator-specific-code)
   * [Forbidden System Tasks and Functions](#forbidden-system-tasks-and-functions)
   * [Backdoor Force and Probe in Chip-level](#backdoor-force-and-probe-in-chip-level)
+  * [Functional coverage](#functional-coverage)
 * [SystemVerilog Assertions](#systemverilog-assertions)
 
 ## Introduction
@@ -1179,6 +1180,17 @@ backdoor force or probe. This assumes gate-level netlist won't be flattened.
 * Do not reference to internal clocks/resets, as they may not be preserved, even if the
   clocks/resets are in the module inputs/outputs. If we have to, place it in an anchored buffer.
 * CSR hierarchies are likely to be preserved, so CSR backdoor access will still work.
+
+### Functional coverage
+
+Do not use `illegal_bins` as a checker. If the condition being illegal should cause a simulation
+failure, ensure there is also an associated check with it.
+This check may be easier to implement in the scoreboard or where the coverage is being sampled.
+It may take the form of a UVM check or an assertion, depending on what's easier.
+The check must be outside the coverage enable sampling blocks.
+It's OK to use `illegal_bins` as the default case,
+but not to rely on it as a check since it will only be active when coverage is enabled. In addition,
+some simulators may still show a test to pass even when one of the `illegal_bins` condition is hit.
 
 
 ## SystemVerilog Assertions
