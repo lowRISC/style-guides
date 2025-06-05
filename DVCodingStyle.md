@@ -45,7 +45,7 @@ following the [UVM methodology](https://www.accellera.org/images//downloads/stan
   * [Bind Statements](#bind-statements)
   * [Simulator Specific Code](#simulator-specific-code)
   * [Forbidden System Tasks and Functions](#forbidden-system-tasks-and-functions)
-  * [Backdoor Force and Probe in Chip-level](#Backdoor Force and Probe in Chip-level)
+  * [Backdoor Force and Probe in Chip-level](#backdoor-force-and-probe-in-chip-level)
 * [SystemVerilog Assertions](#systemverilog-assertions)
 
 ## Introduction
