@@ -1073,32 +1073,83 @@ assert(function_that_has_side_effects());
 
 ### Wait and Fork
 
-Always put `wait fork` and `disable fork` constructs inside of an
-`isolation fork...join` block to avoid erroneous waiting.
-It is recommended to use the `DV_SPINWAIT` macro whenever possible,
-[as described here](#macro-usage).
+In order to run multiple processes and wait for the first to exit, use
+an isolation fork and `join_any` like this:
 
-When disabling subprocesses, this may be done by using `disable fork` to
-terminate all processes or by `disable thread_label` to disable a specific
-thread. You may not use `disable fork_label` to disable all threads in a fork
-statement because there is inconsistent support for this among EDA tools. The
-use of `disable fork_label` is not compliant to the SystemVerilog-2017
-standard (see Section 9.6.2 and 9.6.3 of the SV2017 LRM). Example code:
-
-```
-fork: fork_label
-  begin: thread_label
+```systemverilog
+fork : isolation_fork
+  begin
+    fork
+      task_1();
+      task_2();
+      task_3();
+    join_any
+    disable fork;
   end
-  ...
-join_any
+join
+```
 
-// INCORRECT.
-disable fork_label;
-// Valid, but does not respect parent child process relationships.
-disable thread_label;
-// Kills all threads spawned by the parent thread, including the ones in the
-// past.
-disable fork;
+The isolation fork ensures that the `disable fork` kills any processes
+inside the fork that are still running, but does not kill unrelated
+processes that happen to be siblings of the one that runs the example.
+
+Use `disable fork` (inside an isolation fork) instead of disabling a
+single process by label. This ensures that any children of the process
+are also disabled.
+
+To make the code slightly more compact, the first and last lines in
+the example above may be merged, which also removes one layer of
+indentation:
+```systemverilog
+fork : isolation_fork begin
+  fork
+    task_1();
+    task_2();
+    task_3();
+  join_any
+  disable fork;
+end join
+```
+
+This structure (where `begin` is on the same line as the `fork`)
+should only be used when there is a single block inside the fork.
+
+Do not follow a block using `begin` / `end` with one that doesn't,
+because the result can be hard to read. Do not write code like this:
+
+:-1:
+```systemverilog
+// DO NOT WRITE CODE LIKE THIS
+fork
+  begin
+    statement_1;
+    statement_2;
+  end
+  task_3();
+join
+```
+
+Instead, write either this:
+```systemverilog
+fork
+  begin
+    statement_1;
+    statement_2;
+  end
+  begin
+    task_3();
+  end
+join
+```
+or this:
+```systemverilog
+fork
+  task_3();
+  begin
+    statement_1;
+    statement_2;
+  end
+join
 ```
 
 ### Wait And Non-Forever Loop
