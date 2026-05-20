@@ -214,7 +214,7 @@ File extensions have the following meanings:
 Only `.sv` and `.v` files are intended to be compilation units. `.svh` and `.vh`
 files may only be `` `include``-ed into other files.
 
-With exceptions of netlist files, each .sv or .v file should contain only one
+With the exception of netlist files, each .sv or .v file should contain only one
 module, and the name should be associated. For instance, file `foo.sv` should
 contain only the module `foo`.
 
@@ -222,7 +222,7 @@ contain only the module `foo`.
 
 #### Characters
 
-***Use only ASCII characters with UNIX-style line endings(`"\n"`).***
+***Use only ASCII characters with UNIX-style line endings (`"\n"`).***
 
 #### POSIX File Endings
 
@@ -261,7 +261,7 @@ To convert tabs to spaces on any file, you can use the
 
 ***Use `begin` and `end` unless the whole statement fits on a single line.***
 
-If a statement wraps at a block boundary, it must use `begin` and `end.` Only if
+If a statement wraps at a block boundary, it must use `begin` and `end`. Only if
 a whole semicolon-terminated statement fits on a single line can `begin` and
 `end` be omitted.
 
@@ -1021,7 +1021,7 @@ facilitate the creation of IP that may be re-used across many projects.
 
 The preferred naming convention for all immutable constants is to use `ALL_CAPS`, but there are times when the use of `UpperCamelCase` might be considered more natural.
 
-| Constant Type | Style Preference | Conversation |
+| Constant Type | Style Preference | Reason |
 | ---- | ---- | ---- |
 | \`define            | `ALL_CAPS`       | Truly constant |
 | module parameter    | `UpperCamelCase` | truly modifiable by instantiation, not constant |
@@ -1592,7 +1592,7 @@ Modules may not instantiate themselves recursively.
 
 ### Constants
 
-***It is recommended to use symbolicly named constants instead of
+***It is recommended to use symbolically named constants instead of
 raw numbers.***
 
 Try to give commonly used constants symbolic names rather than repeatedly typing
@@ -1683,7 +1683,7 @@ Rather than letting boolean operations and if expressions reduce a multi-bit
 signal to a single bit, explicitly compare the multi-bit signal to 0. The
 implicit conversion can hide subtle logic bugs.
 
-Examples;
+Examples:
 
 &#x1f44d;
 ```systemverilog {.good}
@@ -1775,7 +1775,7 @@ blocks must use blocking assignments.***
 Never mix assignment types within a block declaration.
 
 A sequential block (a block that latches state on a clock edge) must exclusively
-use non-block assignments, as defined in the Sequential Logic section below.
+use non-blocking assignments, as defined in the Sequential Logic section below.
 
 Purely combinational blocks must exclusively use blocking assignments.
 
@@ -1941,7 +1941,7 @@ gate-counts available in today's technologies).
 
 For an internally-generated signal that could be invalid (but not driven to `X`)
 and is used to trigger some action (such as a register write-enable), it is
-recommened to add an assert to check that when the enable is true, the signal is
+recommended to add an assert to check that when the enable is true, the signal is
 valid. This triggers a simple to diagnose failure when an invalid value has been
 accidentally used.
 
@@ -2070,7 +2070,7 @@ instead:
 ```systemverilog
 `ASSERT(AddrKnownIfValid, addr_valid |-> !$isunknown(addr))
 always_comb begin
-  out = '0
+  out = '0;
   unique case (addr[1:0])
     ConstAddr1: out = foo;
     ConstAddr2: out = bar;
@@ -2750,7 +2750,7 @@ always_ff @(posedge clk_i or negedge rst_ni) begin
 end
 
 always_comb begin
-  if (bool_a || (bool_b && !bool_c) begin
+  if (bool_a || (bool_b && !bool_c)) begin
     x = 1'b1;
   end else begin
     x = 1'b0;
@@ -2837,7 +2837,7 @@ logic [15:0] word_array[3] = '{word0, word1, word2};
 
 ### Finite State Machines
 
-***State machines use an enum to define states, and be implemented with
+***State machines use an enum to define states, and must be implemented with
 two process blocks: a combinational block and a clocked block.***
 
 Every state machine description has three parts:
@@ -2850,7 +2850,7 @@ Every state machine description has three parts:
 *Enumerating States*
 
 The enum statement for the state machine should list each state in the state
-machine. Comments describing the states should be deferred to case statement in
+machine. Comments describing the states should be deferred to the case statement in
 the combinational process block, below.
 
 States should be named in `UpperCamelCase`, like other
@@ -2955,7 +2955,7 @@ If one signal is only a delayed version of another signal, the `_q` suffix
 should be used to indicate this relationship.
 
 If another signal is then delayed by another clock cycle, the next signal should
-be identifed with the `_q2` suffix, and then `_q3` and so on.
+be identified with the `_q2` suffix, and then `_q3` and so on.
 
 Example:
 
@@ -3091,7 +3091,7 @@ document, soon.
 ## Appendix - Condensed Style Guide
 
 This is a short summary of the Comportable style guide. Refer to the main text
-body for explanations examples, and exceptions.
+body for explanations, examples, and exceptions.
 
 ### Basic Style Elements
 
