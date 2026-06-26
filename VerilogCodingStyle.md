@@ -2754,6 +2754,7 @@ always_comb begin
     x = 1'b1;
   end else begin
     x = 1'b0;
+  end
 end
 
 assign z = ((bool_a != bool_b) || bool_c) ? a : b;
@@ -2775,6 +2776,7 @@ always_comb begin
     x = 1'b1;
   end else begin
     x = 1'b0;
+  end
 end
 
 assign z = ((bool_a ^ bool_b) | bool_c) ? a : b;
