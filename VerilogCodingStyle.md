@@ -3095,7 +3095,7 @@ body for explanations, examples, and exceptions.
 
 ### Basic Style Elements
 
-* Use SystemVerilog-2012 conventions, files named as module.sv, one file
+* Use SystemVerilog-2017 conventions, files named as module.sv, one file
   per module
 * Only ASCII, **100** chars per line, **no** tabs, **two** spaces per
   indent for all paired keywords.
