@@ -909,9 +909,19 @@ end-of-test timeouts or objections:
     print any messages.
     The `uvm_{info/error/fatal}` macros must be used instead.
 5.  Do not use the `uvm_warning` macro, use `uvm_error` or `uvm_fatal` instead.
-6.  The first argument to these report macros must be one of the `gfn` or
-    `gtn` shorthand macros used in place of `get_full_name()` and `get_type_name()`.
-    This will allow for easier debugging should something go wrong.
+6.  The first argument to these report macros is the message ID.
+    `dv_report_server` prints the full name of the reporting component before the ID.
+    *   In a sequence, use `gfn`, the shorthand for `get_full_name()`, which includes the names of the sequence and of its parent sequences.
+        `dv_report_server` only prints the sequencer, or nothing when the sequence has none, so the ID is the only place where these names appear.
+    *   In a component, use a short ID that names the kind of message, such as `"sram_write"` or `"eot_check"`, so that the log can be filtered by kind.
+        `gfn` is allowed there, but it only repeats the name that `dv_report_server` already prints.
+        A "kind ID" is a fixed string in lower `snake_case` that names what the message is about, such as a transaction, a register or a check.
+        It holds no component name, which `dv_report_server` already prints, and no run-time value, which belongs in the message.
+        `+uvm_set_verbosity` and `+uvm_set_action` can then raise the verbosity of one kind of message, or filter it out, from the command line.
+        The UVM report summary at the end of the log also counts the messages per ID.
+        The same kind of message must use the same ID in every component.
+    *   In any other object, use `gtn`, the shorthand for `get_type_name()`, or a short ID that names the kind of message.
+    *   Outside a class, such as in an interface, a module or a package function, use `$sformatf("%m")`, which gives the hierarchical name of the current scope.
 7.  The `UVM_NONE` and `UVM_FULL` verbosity levels must not be used for any
     report messages.
     Recommended criteria for the choice of `VERBOSITY` value for `uvm_info`
