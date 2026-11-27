@@ -132,6 +132,10 @@ Additional naming guidelines:
 
 Define one class per file, and the filename should match the name of the class.
 The class files must be `` `include``-ed into the package file.
+A file that is `` `include``-ed into a package, such as a class file or a sequence list, has the `.svh` extension.
+A file that the compiler reads on its own, such as a package, an interface, a module or `tb.sv`, has the `.sv` extension.
+The extension then tells a reader and the tools whether a file is a compilation unit.
+
 Directory structure of the UVM agent and UVM environment testbench components
 along with their related files are shown below, with some additional guidance on
 declaring functions from a package context.
@@ -149,18 +153,18 @@ declaring functions from a package context.
 ```systemverilog
 <block>_agent/
   <block>_if.sv
-  <block>_item.sv
-  <block>_agent.sv
+  <block>_item.svh
+  <block>_agent.svh
   <block>_agent_pkg.sv
-  <block>_agent_cfg.sv
-  <block>_agent_cov.sv
-  <block>_driver.sv
-  <block>_host_driver.sv (Only if block requires a separate driver for host mode)
-  <block>_device_driver.sv (Only if block requires a separate driver for device mode)
-  <block>_monitor.sv
-  <block>_sequencer.sv
+  <block>_agent_cfg.svh
+  <block>_agent_cov.svh
+  <block>_driver.svh
+  <block>_host_driver.svh (Only if block requires a separate driver for host mode)
+  <block>_device_driver.svh (Only if block requires a separate driver for device mode)
+  <block>_monitor.svh
+  <block>_sequencer.svh
   seq_lib/
-    <block>_base_seq.sv
+    <block>_base_seq.svh
 ```
 
 
@@ -170,7 +174,7 @@ declaring functions from a package context.
   subdirectories `<dut>/dv/env/, <dut>/dv/tests/, <dut>/dv/tb/`.
 * The `<dut>_env_pkg` should import the `<dut>_agent_pkg`.
 * All UVM virtual sequences for a given DUT will be placed under `env/seq_lib/`,
-  along with a `<dut>_vseq_list.sv` file that `` `include``-es all of the virtual
+  along with a `<dut>_vseq_list.svh` file that `` `include``-es all of the virtual
   sequence files. This virtual sequence list file must be `` `include``-ed by
   `env/<dut>_env_pkg.sv`.
 * If applicable, `env/<dut>_env_pkg.sv` must import the `<dut>_agent_pkg`.
@@ -180,20 +184,20 @@ declaring functions from a package context.
 ```systemverilog
 <dut>/dv/
   env/
-    <dut>_env.sv
+    <dut>_env.svh
     <dut>_env_pkg.sv
-    <dut>_env_cfg.sv
-    <dut>_env_cov.sv
-    <dut>_scoreboard.sv
-    <dut>_virtual_sequencer.sv
+    <dut>_env_cfg.svh
+    <dut>_env_cov.svh
+    <dut>_scoreboard.svh
+    <dut>_virtual_sequencer.svh
     seq_lib/
       // These allow basic functionality to be added to the environment
-      <dut>_base_vseq.sv
-      <dut>_sanity_vseq.sv
+      <dut>_base_vseq.svh
+      <dut>_sanity_vseq.svh
   tb/
     tb.sv
   tests/
-    <dut>_base_test.sv
+    <dut>_base_test.svh
     <dut>_test_pkg.sv
 ```
 `<block>_agent_pkg.sv, <dut>_env_pkg.sv, <dut>_test_pkg.sv, and tb/tb.sv`
@@ -905,9 +909,19 @@ end-of-test timeouts or objections:
     print any messages.
     The `uvm_{info/error/fatal}` macros must be used instead.
 5.  Do not use the `uvm_warning` macro, use `uvm_error` or `uvm_fatal` instead.
-6.  The first argument to these report macros must be one of the `gfn` or
-    `gtn` shorthand macros used in place of `get_full_name()` and `get_type_name()`.
-    This will allow for easier debugging should something go wrong.
+6.  The first argument to these report macros is the message ID.
+    `dv_report_server` prints the full name of the reporting component before the ID.
+    *   In a sequence, use `gfn`, the shorthand for `get_full_name()`, which includes the names of the sequence and of its parent sequences.
+        `dv_report_server` only prints the sequencer, or nothing when the sequence has none, so the ID is the only place where these names appear.
+    *   In a component, use a short ID that names the kind of message, such as `"sram_write"` or `"eot_check"`, so that the log can be filtered by kind.
+        `gfn` is allowed there, but it only repeats the name that `dv_report_server` already prints.
+        A "kind ID" is a fixed string in lower `snake_case` that names what the message is about, such as a transaction, a register or a check.
+        It holds no component name, which `dv_report_server` already prints, and no run-time value, which belongs in the message.
+        `+uvm_set_verbosity` and `+uvm_set_action` can then raise the verbosity of one kind of message, or filter it out, from the command line.
+        The UVM report summary at the end of the log also counts the messages per ID.
+        The same kind of message must use the same ID in every component.
+    *   In any other object, use `gtn`, the shorthand for `get_type_name()`, or a short ID that names the kind of message.
+    *   Outside a class, such as in an interface, a module or a package function, use `$sformatf("%m")`, which gives the hierarchical name of the current scope.
 7.  The `UVM_NONE` and `UVM_FULL` verbosity levels must not be used for any
     report messages.
     Recommended criteria for the choice of `VERBOSITY` value for `uvm_info`
